@@ -486,7 +486,7 @@ module.exports = {
 export async function POST(request: Request) {
   // CORS設定
   const allowedOrigins = [
-    'https://ieguchi.vercel.app',
+    'https://madoguchi-ai.vercel.app',
     'http://localhost:3000',
   ];
 
@@ -705,7 +705,7 @@ const token = decryptToken(authToken);
 
 ```typescript
 // HTTPSのみ許可
-const API_BASE_URL = 'https://ieguchi.vercel.app/api';
+const API_BASE_URL = 'https://madoguchi-ai.vercel.app/api';
 
 // Authorization Header使用
 fetch(`${API_BASE_URL}/properties/import`, {

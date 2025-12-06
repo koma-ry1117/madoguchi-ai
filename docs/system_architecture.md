@@ -1,4 +1,4 @@
-# IEGUCHI システム全体像・アーキテクチャ設計書
+# madoguchi-ai システム全体像・アーキテクチャ設計書
 
 > 機能仕様に関する認識合わせ用ドキュメント
 
@@ -18,7 +18,7 @@
 
 ## システム概要
 
-IEGUCHIは、不動産業界向けの窓口営業支援AIアシスタントシステムです。AIアバター「イエグチさん」が顧客対応を行い、24時間365日の物件検索・提案を実現します。
+madoguchi-aiは、不動産業界向けの窓口営業支援AIアシスタントシステムです。AIアバター（名前未定）が顧客対応を行い、24時間365日の物件検索・提案を実現します。
 
 ### 主な機能
 
@@ -160,7 +160,7 @@ sequenceDiagram
     actor Operator as オペレーター
     participant Site as 物件サイト<br/>（アットホーム等）
     participant Ext as Chrome拡張機能
-    participant API as IEGUCHIシステム
+    participant API as madoguchi-aiシステム
     participant GPT as GPT-4o
     participant DB as データベース
     
@@ -187,7 +187,7 @@ sequenceDiagram
 sequenceDiagram
     actor Customer as 顧客
     participant UI as 物件詳細ページ
-    participant API as IEGUCHIシステム
+    participant API as madoguchi-aiシステム
     participant DB as データベース
     participant Resend as Resend API
     participant Email as メールクライアント
@@ -251,7 +251,7 @@ graph TD
 **目的**: AIアバターとの対話による物件検索
 
 **主要要素**:
-- AIアバター「イエグチさん」の表示
+- AIアバター（名前未定）の表示
 - 会話履歴エリア
 - 音声入力ボタン
 - テキスト入力フォーム

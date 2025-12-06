@@ -383,7 +383,7 @@ src/schemas/             # Zodスキーマ
 │ Resend API                             │
 │                                        │
 │ resend.emails.send({                   │
-│   from: 'イエグチ <noreply@ieguchi.jp>',│
+│   from: 'madoguchi-ai <noreply@madoguchi-ai.jp>',│
 │   to: customer.email,                  │
 │   subject: '内見予約が確定しました',    │
 │   react: <ViewingConfirmationEmail />, │

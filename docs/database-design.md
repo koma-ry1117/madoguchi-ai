@@ -581,8 +581,8 @@ CREATE TABLE email_logs (
   to_name VARCHAR(100),
 
   -- メール内容
-  from_email VARCHAR(255) NOT NULL DEFAULT 'noreply@ieguchi.jp',
-  from_name VARCHAR(100) DEFAULT 'イエグチ',
+  from_email VARCHAR(255) NOT NULL DEFAULT 'noreply@madoguchi-ai.jp',
+  from_name VARCHAR(100) DEFAULT 'madoguchi-ai',
   subject VARCHAR(255) NOT NULL,
   template_name VARCHAR(100), -- 使用したテンプレート名
 

@@ -34,7 +34,7 @@ app/api/
 ### ベースURL
 ```
 開発環境: http://localhost:3000/api
-本番環境: https://ieguchi.vercel.app/api
+本番環境: https://madoguchi-ai.vercel.app/api
 ```
 
 ### 認証方式
@@ -260,7 +260,7 @@ export async function POST(request: Request) {
   // AI生成
   const result = await streamText({
     model: openai('gpt-4o'),
-    system: `あなたは不動産営業のイエグチさんです。
+    system: `あなたは不動産営業のAIアシスタントです。
 丁寧で親しみやすく、高齢者にも分かりやすい説明を心がけてください。`,
     messages,
     tools: {
@@ -941,7 +941,7 @@ export async function POST(request: Request) {
     "customer_name": "山田太郎",
     "property_title": "文京区本郷 2LDK",
     "viewing_date": "2025年11月20日 14:00",
-    "property_url": "https://ieguchi.jp/properties/uuid"
+    "property_url": "https://madoguchi-ai.jp/properties/uuid"
   },
   "viewing_id": "uuid",
   "include_calendar": true
@@ -1001,7 +1001,7 @@ export async function POST(request: Request) {
 
   // メール送信
   const { data, error } = await resend.emails.send({
-    from: 'イエグチ <noreply@ieguchi.jp>',
+    from: 'madoguchi-ai <noreply@madoguchi-ai.jp>',
     to: to_email,
     subject: getEmailSubject(email_type),
     react: ViewingConfirmationEmail(template_data),

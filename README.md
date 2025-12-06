@@ -1,15 +1,15 @@
-# IEGUCHI - 不動産窓口営業アシスタント
+# madoguchi-ai - 不動産窓口営業アシスタント
 
 > AIを活用した次世代不動産営業支援システム
 
 ## プロジェクト概要
 
-**イエグチ（IEGUCHI）** は、不動産店舗での顧客対応を自動化するAIエージェントシステムです。音声対応・アバター表示・物件検索機能を統合し、高齢者にも分かりやすい接客体験を提供します。
+**madoguchi-ai** は、不動産店舗での顧客対応を自動化するAIエージェントシステムです。音声対応・アバター表示・物件検索機能を統合し、高齢者にも分かりやすい接客体験を提供します。
 
 ### システム名
-- **正式名称**: 不動産窓口営業アシスタント「イエグチ」
-- **略称**: イエグチ / イエグチさん
-- **英語表記**: IEGUCHI - Real Estate Front Desk Sales Assistant
+- **正式名称**: 不動産窓口営業アシスタント「madoguchi-ai」
+- **略称**: madoguchi-ai
+- **英語表記**: madoguchi-ai - Real Estate Front Desk Sales Assistant
 
 ### 主な特徴
 
@@ -23,8 +23,8 @@
 
 ```bash
 # リポジトリのクローン
-git clone https://github.com/koma-ry1117/ieguchi.git
-cd ieguchi
+git clone https://github.com/koma-ry1117/madoguchi-ai.git
+cd madoguchi-ai
 
 # 依存関係のインストール（pnpm推奨）
 pnpm install
@@ -65,7 +65,7 @@ pnpm dev
 ## プロジェクト構成
 
 ```
-ieguchi/
+madoguchi-ai/
 ├── README.md                       # このファイル
 ├── docs/                           # ドキュメント
 │   ├── service-overview-diagram.md # サービス全体像（giyam様向け）⭐

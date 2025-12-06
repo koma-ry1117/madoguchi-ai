@@ -235,7 +235,7 @@ import { generateText, streamText } from 'ai';
 // 会話生成
 const { text } = await generateText({
   model: openai('gpt-4o'),
-  system: 'あなたは不動産営業のイエグチさんです...',
+  system: 'あなたは不動産営業のAIアシスタントです...',
   prompt: userMessage,
 });
 
@@ -431,7 +431,7 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 await resend.emails.send({
-  from: 'イエグチ <noreply@ieguchi.jp>',
+  from: 'madoguchi-ai <noreply@madoguchi-ai.jp>',
   to: customer.email,
   subject: '内見予約が確定しました',
   react: ViewingConfirmationEmail({
@@ -485,7 +485,7 @@ export default function ViewingConfirmationEmail({
             <Text><strong>内見日時:</strong> {viewingDate}</Text>
           </Section>
           <Button
-            href="https://ieguchi.jp/viewings"
+            href="https://madoguchi-ai.jp/viewings"
             style={button}
           >
             予約詳細を確認
@@ -534,10 +534,10 @@ calendar.createEvent({
   summary: `物件内見: ${property.title}`,
   description: `住所: ${property.address}`,
   location: property.address,
-  url: `https://ieguchi.jp/properties/${property.id}`,
+  url: `https://madoguchi-ai.jp/properties/${property.id}`,
   organizer: {
-    name: 'イエグチ',
-    email: 'noreply@ieguchi.jp',
+    name: 'madoguchi-ai',
+    email: 'noreply@madoguchi-ai.jp',
   },
   attendees: [
     {
@@ -549,7 +549,7 @@ calendar.createEvent({
 
 // .icsファイルをメールに添付
 await resend.emails.send({
-  from: 'イエグチ <noreply@ieguchi.jp>',
+  from: 'madoguchi-ai <noreply@madoguchi-ai.jp>',
   to: customer.email,
   subject: '内見予約が確定しました',
   react: ViewingConfirmationEmail({ ... }),
@@ -673,7 +673,7 @@ chrome-extension/
 ```json
 {
   "manifest_version": 3,
-  "name": "IEGUCHI Property Importer",
+  "name": "madoguchi-ai Property Importer",
   "version": "1.0.0",
   "permissions": [
     "activeTab",
@@ -720,7 +720,7 @@ chrome.action.onClicked.addListener(async (tab) => {
   });
 
   // Next.js APIに送信
-  const response = await fetch('https://ieguchi.vercel.app/api/properties/import', {
+  const response = await fetch('https://madoguchi-ai.vercel.app/api/properties/import', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
