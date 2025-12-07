@@ -60,7 +60,9 @@
 
 ## System Flows
 
-### オペレーター登録フロー
+### オペレーター登録フロー（招待メール方式）
+
+管理者がオペレーターを登録すると、招待メールが送信され、オペレーター自身がパスワードを設定するフロー。
 
 ```mermaid
 sequenceDiagram
@@ -69,21 +71,41 @@ sequenceDiagram
     participant API as /api/admin/operators
     participant Auth as Supabase Auth
     participant DB as Supabase DB
+    participant Email as Resend
+    participant O as Operator
 
-    A->>UI: フォーム入力
+    A->>UI: フォーム入力（メール、会社名等）
     UI->>API: POST /api/admin/operators
 
     API->>API: admin権限チェック
-    API->>Auth: admin.createUser()
-    Auth-->>API: user (role=operator)
+    API->>Auth: admin.inviteUserByEmail()
+    Auth-->>API: user (role=operator, unconfirmed)
 
-    API->>DB: auth.users UPDATE (role)
-    API->>DB: operators INSERT
+    API->>DB: auth.users UPDATE (role, raw_user_meta_data)
+    API->>DB: operators INSERT (status='pending_activation')
     DB-->>API: operator
 
+    API->>Email: 招待メール送信
+    Email-->>O: 招待メール（パスワード設定リンク）
+
     API-->>UI: 成功
-    UI-->>A: 一覧に戻る
+    UI-->>A: 一覧に戻る（ステータス: 招待中）
+
+    Note over O: オペレーターが招待メールを受信
+
+    O->>Auth: パスワード設定リンクをクリック
+    Auth-->>O: パスワード設定画面
+    O->>Auth: パスワード設定
+    Auth->>Auth: ユーザー確認完了
+    Auth->>DB: operators UPDATE (status='active')
 ```
+
+**ポイント**
+- 管理者はパスワードを設定しない（セキュリティ向上）
+- `admin.inviteUserByEmail()` で招待メール自動送信
+- オペレーターは自分でパスワードを設定
+- 招待メールの有効期限: 24時間
+- 招待中のオペレーターは `pending_activation` ステータス
 
 ## Components and Interfaces
 
@@ -111,12 +133,12 @@ sequenceDiagram
 ```typescript
 interface OperatorFormData {
   email: string;
-  password?: string; // 新規のみ
+  // パスワードは不要（招待メールでオペレーター自身が設定）
   company_name: string;
   company_address?: string;
   phone?: string;
   subscription_plan: 'basic' | 'standard' | 'premium';
-  subscription_status: 'active' | 'suspended' | 'cancelled' | 'trial';
+  subscription_status: 'active' | 'suspended' | 'cancelled' | 'trial' | 'pending_activation';
   contract_start_date: Date;
   contract_end_date?: Date;
   is_active: boolean;
@@ -171,16 +193,44 @@ interface OperatorFormData {
 
 #### POST /api/admin/operators
 
+招待メール方式でオペレーターを登録。パスワードは不要。
+
 **Request**
 ```json
 {
   "email": "operator@example.com",
-  "password": "securepassword",
   "company_name": "〇〇不動産株式会社",
   "company_address": "東京都文京区...",
   "phone": "03-1234-5678",
   "subscription_plan": "standard",
   "contract_start_date": "2025-01-15"
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "data": {
+    "operator_id": "uuid",
+    "status": "pending_activation",
+    "invitation_sent": true,
+    "message": "招待メールを送信しました"
+  }
+}
+```
+
+#### POST /api/admin/operators/[id]/resend-invitation
+
+招待メールを再送信（有効期限切れ時など）
+
+**Response**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "招待メールを再送信しました"
+  }
 }
 ```
 
@@ -246,14 +296,23 @@ interface Operator {
   company_address?: string;
   phone?: string;
   email: string;
-  subscription_status: 'active' | 'suspended' | 'cancelled' | 'trial';
+  subscription_status: 'active' | 'suspended' | 'cancelled' | 'trial' | 'pending_activation';
   subscription_plan: 'basic' | 'standard' | 'premium';
   contract_start_date: Date;
   contract_end_date?: Date;
   is_active: boolean;
+  invited_at?: Date;      // 招待メール送信日時
+  activated_at?: Date;    // パスワード設定完了日時
   created_at: Date;
   updated_at: Date;
 }
+```
+
+**subscription_status の状態遷移**
+```
+pending_activation → active → suspended → cancelled
+                  ↓
+               (招待期限切れ → 再招待可能)
 ```
 
 ## Security Considerations
