@@ -90,17 +90,29 @@ sequenceDiagram
 
     SW->>API: POST (HTML, URL, Token)
     API->>API: Auth検証
-    API->>GPT: generateObject (HTML)
-    GPT-->>API: 構造化データ
-    API->>API: Embeddings生成
-    API->>DB: properties INSERT
-    API->>DB: property_import_logs INSERT
-    API->>DB: Storage upload (HTML)
-    API-->>SW: 成功 (property_id)
+    API->>DB: 重複チェック (source_url)
 
-    SW-->>P: 完了通知
-    P-->>O: 「取り込み完了」表示
+    alt 重複あり
+        API-->>SW: 重複エラー (既存property_id)
+        SW-->>P: 「この物件は既に取り込み済みです」
+        P-->>O: 更新オプション表示
+    else 重複なし
+        API->>GPT: generateObject (HTML)
+        GPT-->>API: 構造化データ
+        API->>API: Embeddings生成
+        API->>DB: properties INSERT
+        API->>DB: property_import_logs INSERT
+        API->>DB: Storage upload (HTML)
+        API-->>SW: 成功 (property_id)
+        SW-->>P: 完了通知
+        P-->>O: 「取り込み完了」表示
+    end
 ```
+
+**重複取り込み防止**
+- `source_url` で重複チェック（オペレーターごと）
+- 重複時は既存物件の更新オプションを提示
+- `property_import_logs` で取り込み履歴を追跡
 
 ## Components and Interfaces
 
@@ -167,17 +179,45 @@ interface AuthState {
 interface ImportRequest {
   html: string;
   url: string;
+  force_update?: boolean;  // 重複時に強制更新
 }
 ```
 
-**Response**
+**Response (新規取り込み成功)**
 ```json
 {
   "success": true,
   "data": {
     "property_id": "uuid",
     "import_log_id": "uuid",
+    "is_new": true,
     "message": "物件を取り込みました"
+  }
+}
+```
+
+**Response (重複検出)**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "DUPLICATE_PROPERTY",
+    "message": "この物件は既に取り込み済みです",
+    "existing_property_id": "uuid",
+    "imported_at": "2025-01-15T10:30:00Z"
+  }
+}
+```
+
+**Response (強制更新成功)**
+```json
+{
+  "success": true,
+  "data": {
+    "property_id": "uuid",
+    "import_log_id": "uuid",
+    "is_new": false,
+    "message": "物件を更新しました"
   }
 }
 ```
@@ -204,6 +244,14 @@ const PropertySchema = z.object({
 
 ## Data Models
 
+### properties (source_url追加)
+```typescript
+interface Property {
+  // ... 既存フィールド
+  source_url?: string;  // 取り込み元URL（重複チェック用）
+}
+```
+
 ### property_import_logs
 ```typescript
 interface PropertyImportLog {
@@ -215,9 +263,18 @@ interface PropertyImportLog {
   imported_by: string;
   imported_at: Date;
   import_method: 'chrome_extension';
-  status: 'success' | 'failed' | 'pending';
+  status: 'success' | 'failed' | 'pending' | 'duplicate_updated';
+  is_update: boolean;  // 更新取り込みかどうか
   error_message?: string;
 }
+```
+
+### Database Constraints
+```sql
+-- オペレーターごとに source_url をユニークに（重複取り込み防止）
+CREATE UNIQUE INDEX idx_properties_source_url_operator
+ON properties(operator_id, source_url)
+WHERE source_url IS NOT NULL;
 ```
 
 ## Security Considerations
@@ -238,6 +295,7 @@ interface PropertyImportLog {
 ### API Errors
 - 認証エラー (401) → 再認証要求
 - 権限エラー (403) → エラーメッセージ
+- 重複エラー (409) → 更新オプション提示
 - GPT抽出失敗 → 手動入力フォームへフォールバック
 
 ## Testing Strategy
