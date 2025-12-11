@@ -40,7 +40,7 @@
 │ POST /api/voice/   │  │ POST /api/voice/   │
 │ transcribe         │  │ synthesize         │
 │                    │  │                    │
-│ OpenAI Whisper API │  │ ElevenLabs API     │
+│ OpenAI Whisper API │  │ Google Cloud TTS   │
 └────────────────────┘  │ + Supabase Cache   │
                         └────────────────────┘
 ```
@@ -51,7 +51,7 @@
 |-------|------------------|------|
 | Audio Recording | Web Audio API, MediaRecorder | ブラウザ音声録音 |
 | STT | OpenAI Whisper API | 音声→テキスト |
-| TTS | ElevenLabs API | テキスト→音声 |
+| TTS | Google Cloud TTS（WaveNet） | テキスト→音声 |
 | Cache | Supabase Storage | 音声キャッシュ |
 | Audio Playback | HTML5 Audio API | 音声再生 |
 
@@ -89,7 +89,7 @@ sequenceDiagram
     participant AP as AudioPlayer
     participant API as /api/voice/synthesize
     participant Cache as Supabase Storage
-    participant E as ElevenLabs
+    participant GC as Google Cloud TTS
 
     Kiosk->>AP: AIメッセージ受信
     AP->>API: POST { text }
@@ -99,8 +99,8 @@ sequenceDiagram
     alt Cache Hit
         Cache-->>API: audio data
     else Cache Miss
-        API->>E: textToSpeech.convert()
-        E-->>API: audio stream
+        API->>GC: synthesizeSpeech()
+        GC-->>API: audio stream
         API->>Cache: upload(hash.mp3)
     end
 
@@ -278,7 +278,7 @@ const PRECACHED_PHRASES = [
 - 無音検出 → 「お話が聞き取れませんでした」メッセージ
 
 ### Synthesis Errors
-- ElevenLabs APIエラー → テキストのみ表示（音声なし）
+- Google Cloud TTS APIエラー → テキストのみ表示（音声なし）
 - キャッシュ保存失敗 → ログ出力（サイレント失敗）
 - 音声再生失敗 → 再生ボタン表示
 
@@ -291,7 +291,7 @@ const PRECACHED_PHRASES = [
 
 ### Integration Tests
 - /api/voice/transcribe: Whisper API呼び出し
-- /api/voice/synthesize: ElevenLabs + キャッシュ
+- /api/voice/synthesize: Google Cloud TTS + キャッシュ
 
 ### E2E Tests
 - 録音→変換→AI送信
@@ -301,6 +301,6 @@ const PRECACHED_PHRASES = [
 
 - 音声ファイルサイズ: 最大5MB
 - キャッシュヒット率の監視
-- ElevenLabs レート制限: operator_idごとにレート制限
+- Google Cloud TTS レート制限: operator_idごとにレート制限
 - 録音最大時間: 60秒
 - 事前キャッシュ: よく使うフレーズを起動時にキャッシュ

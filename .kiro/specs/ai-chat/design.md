@@ -67,9 +67,12 @@
           │                   │                   │
           ▼                   ▼                   ▼
 ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────────┐
-│   OpenAI        │ │   Supabase      │ │   Resend                │
-│   GPT-4o        │ │   Database      │ │   メール送信            │
-│   Whisper       │ │   (認証なし)    │ │                         │
+│   Google        │ │   Supabase      │ │   Resend                │
+│   Gemini 2.5    │ │   Database      │ │   メール送信            │
+│   Flash         │ │   (認証なし)    │ │                         │
+├─────────────────┤ │                 │ │                         │
+│   OpenAI        │ │                 │ │                         │
+│   Whisper       │ │                 │ │                         │
 │   Embeddings    │ │                 │ │                         │
 └─────────────────┘ └─────────────────┘ └─────────────────────────┘
 ```
@@ -79,8 +82,8 @@
 | Layer | Choice | Role |
 |-------|--------|------|
 | Frontend | React 19 + Next.js 15 | キオスクUI |
-| AI Chat | Vercel AI SDK + GPT-4o | 会話生成、Function Calling |
-| Voice | OpenAI Whisper + ElevenLabs | 音声入出力 |
+| AI Chat | Vercel AI SDK + Gemini 2.5 Flash | 会話生成、Function Calling |
+| Voice | OpenAI Whisper + Google Cloud TTS | 音声入出力 |
 | Database | Supabase (Service Role) | データ保存（認証なし） |
 | Email | Resend | 確認メール送信 |
 | State | Zustand | セッション状態管理 |
@@ -457,7 +460,7 @@ interface Conversation {
 ## Error Handling
 
 ### 会話エラー
-- OpenAI APIエラー → 「申し訳ございません、もう一度お話しください」
+- Gemini APIエラー → 「申し訳ございません、もう一度お話しください」
 - 物件検索0件 → 条件緩和を提案
 
 ### フォームエラー

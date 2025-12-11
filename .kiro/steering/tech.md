@@ -9,7 +9,7 @@
          ↕
    認証・認可層 (Supabase Auth + RLS)
          ↕
-AI・音声処理層 (OpenAI + ElevenLabs)
+AI・音声処理層 (Google Gemini + OpenAI Whisper + Google Cloud TTS)
          ↕
   データベース層 (Supabase PostgreSQL)
          ↕
@@ -27,9 +27,10 @@ AI・音声処理層 (OpenAI + ElevenLabs)
 ## Key Libraries
 
 ### AI・音声
-- `ai` (Vercel AI SDK) - OpenAI統合、ストリーミング、Function Calling
-- `openai` - GPT-4o（会話・構造化抽出）、Whisper（音声認識）
-- `elevenlabs` - 音声合成
+- `ai` (Vercel AI SDK) - AI統合、ストリーミング、Function Calling
+- `@google/generative-ai` - Gemini 2.5 Flash（会話・構造化抽出）
+- `openai` - Whisper（音声認識）
+- `@google-cloud/text-to-speech` - Google Cloud TTS（音声合成、WaveNet）
 
 ### データ・認証
 - `@supabase/supabase-js` - DB、認証、Storage、Realtime
@@ -87,7 +88,8 @@ AI・音声処理層 (OpenAI + ElevenLabs)
 |---------|------|
 | Next.js App Router | RSC・ストリーミング対応、Vercelとの統合 |
 | Supabase | PostgreSQL + Auth + Storage + Realtime統合、RLSによるセキュリティ |
-| OpenAI統一 | GPT-4o + Whisperでコスト管理が容易 |
+| Google Gemini | コスト効率の良いAI会話（Gemini 2.5 Flash） |
+| Google Cloud TTS | 高品質な日本語音声合成（WaveNet） |
 | Vercel AI SDK | Next.jsとの完璧な統合、ストリーミング対応 |
 | Resend | Next.jsとの相性、React Email対応 |
 | Zustand | Redux より軽量、TypeScript完全対応 |
