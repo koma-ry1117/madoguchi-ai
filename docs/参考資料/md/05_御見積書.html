@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>05_御見積書.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="%E5%BE%A1%E8%A6%8B%E7%A9%8D%E6%9B%B8">御見積書</h1>
+<p><strong>発行日:</strong> 2025年12月7日
+<strong>見積番号:</strong> EST-2025-1207-001
+<strong>有効期限:</strong> 2026年1月31日</p>
+<hr>
+<h2 id="%E7%99%BA%E8%A1%8C%E8%80%85%E6%83%85%E5%A0%B1">発行者情報</h2>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>屋号</td>
+<td>KomaTech</td>
+</tr>
+<tr>
+<td>氏名</td>
+<td>小松原遼羽</td>
+</tr>
+<tr>
+<td>住所</td>
+<td>〒252-0331 神奈川県相模原市南区大野台5-7-17</td>
+</tr>
+<tr>
+<td>電話番号</td>
+<td>070-1317-5266</td>
+</tr>
+<tr>
+<td>メールアドレス</td>
+<td>r.kono17y204@gmail.com</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%E5%AE%9B%E5%85%88">宛先</h2>
+<p><strong>株式会社ギヤマン 御中</strong></p>
+<p>平素より格別のお引き立てを賜り、厚く御礼申し上げます。
+下記の通り御見積申し上げます。</p>
+<hr>
+<h2 id="%E5%BE%A1%E8%A6%8B%E7%A9%8D%E9%87%91%E9%A1%8D">御見積金額</h2>
+<h3 id="%C2%A53500000%E7%A8%8E%E8%BE%BC"><strong>¥3,500,000（税込）</strong></h3>
+<hr>
+<h2 id="%E6%A1%88%E4%BB%B6%E6%A6%82%E8%A6%81">案件概要</h2>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>案件名</td>
+<td>不動産AIエージェントシステム開発（madoguchi-ai）</td>
+</tr>
+<tr>
+<td>開発期間</td>
+<td>5ヶ月</td>
+</tr>
+<tr>
+<td>納品形態</td>
+<td>Webアプリケーション + Chrome拡張機能</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%E9%96%8B%E7%99%BA%E5%86%85%E5%AE%B9">開発内容</h2>
+<h3 id="%E3%82%B3%E3%82%A2%E6%A9%9F%E8%83%BD7%E6%A9%9F%E8%83%BD">コア機能（7機能）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>機能名</th>
+<th>概要</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>AI会話システム</td>
+<td>Gemini 2.5 Flashによる自然な会話、物件検索・提案、内見予約</td>
+</tr>
+<tr>
+<td>2</td>
+<td>音声入出力</td>
+<td>Whisper（音声認識）+ Google Cloud TTS（音声合成）</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Chrome拡張機能</td>
+<td>アットホーム等からワンクリック物件取り込み</td>
+</tr>
+<tr>
+<td>4</td>
+<td>物件管理</td>
+<td>オペレーター向け物件CRUD、セマンティック検索</td>
+</tr>
+<tr>
+<td>5</td>
+<td>内見予約管理</td>
+<td>予約管理、カレンダー招待、リマインダー</td>
+</tr>
+<tr>
+<td>6</td>
+<td>営業メール配信</td>
+<td>新着物件通知、配信停止管理</td>
+</tr>
+<tr>
+<td>7</td>
+<td>オペレーター管理</td>
+<td>マルチテナントSaaS、サブスクリプション管理</td>
+</tr>
+</tbody>
+</table>
+<h3 id="%E7%94%BB%E9%9D%A2%E6%A7%8B%E6%88%9026%E7%94%BB%E9%9D%A2">画面構成（26画面）</h3>
+<table>
+<thead>
+<tr>
+<th>カテゴリ</th>
+<th>画面数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>共通</td>
+<td>3</td>
+<td>LP、ログイン、エラー</td>
+</tr>
+<tr>
+<td>キオスク（顧客向け）</td>
+<td>1</td>
+<td>AI接客画面（5フェーズ遷移）</td>
+</tr>
+<tr>
+<td>オペレーター管理</td>
+<td>12</td>
+<td>ダッシュボード、物件・顧客・予約・会話・マーケティング管理</td>
+</tr>
+<tr>
+<td>システム管理者</td>
+<td>10</td>
+<td>オペレーター・サブスクリプション・統計・監査ログ管理</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%E6%94%AF%E6%89%95%E6%9D%A1%E4%BB%B6">支払条件</h2>
+<h3 id="%E9%96%8B%E7%99%BA%E8%B2%BB%E7%94%A8%E3%81%AE%E6%94%AF%E6%89%95%E3%81%84%E3%82%B9%E3%82%AD%E3%83%BC%E3%83%A0%E6%88%90%E5%8A%9F%E5%A0%B1%E9%85%AC%E5%9E%8B">開発費用の支払いスキーム（成功報酬型）</h3>
+<table>
+<thead>
+<tr>
+<th>支払タイミング</th>
+<th>金額</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>月額費用</strong></td>
+<td>¥100,000/月 × 5ヶ月</td>
+<td>開発期間中（5ヶ月間）※API利用料含む</td>
+</tr>
+<tr>
+<td>月額費用 小計</td>
+<td>¥500,000</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>成功報酬</strong></td>
+<td>¥3,000,000</td>
+<td>納品・検収完了後の一括支払い</td>
+</tr>
+<tr>
+<td><strong>開発費用 総額</strong></td>
+<td><strong>¥3,500,000</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="%E9%96%8B%E7%99%BA%E6%9C%9F%E9%96%93%E4%B8%AD%E3%81%AEapi%E5%88%A9%E7%94%A8%E6%96%99">開発期間中のAPI利用料</h3>
+<p>開発期間中（5ヶ月間）の外部API利用料は、月額費用（¥100,000）に含まれます。</p>
+<h3 id="%E7%B4%8D%E5%93%81%E5%BE%8C%E3%81%AEapi%E5%88%A9%E7%94%A8%E6%96%99%E9%81%8B%E7%94%A8%E9%96%8B%E5%A7%8B%E5%BE%8C">納品後のAPI利用料（運用開始後）</h3>
+<p>納品・検収完了後の外部API利用料は、受注者（乙）が立替払いし、領収書を添付の上、毎月実費をご請求いたします。</p>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>月額（目安）</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Google Gemini API</td>
+<td>¥1,150/月</td>
+<td>AI会話（Gemini 2.5 Flash）</td>
+</tr>
+<tr>
+<td>OpenAI API (Whisper)</td>
+<td>¥6,750/月</td>
+<td>音声認識</td>
+</tr>
+<tr>
+<td>Google Cloud TTS</td>
+<td>¥4,800/月</td>
+<td>音声合成（WaveNet）</td>
+</tr>
+<tr>
+<td>Supabase (Pro)</td>
+<td>¥3,750/月</td>
+<td>データベース、認証、ストレージ</td>
+</tr>
+<tr>
+<td>Vercel (Pro)</td>
+<td>¥3,000/月</td>
+<td>ホスティング、Cron</td>
+</tr>
+<tr>
+<td>Resend</td>
+<td>¥3,000/月</td>
+<td>メール送信</td>
+</tr>
+<tr>
+<td><strong>合計（目安）</strong></td>
+<td><strong>¥22,450/月</strong></td>
+<td>使用量により変動</td>
+</tr>
+</tbody>
+</table>
+<p><strong>精算方法:</strong></p>
+<ul>
+<li>毎月末締め、翌月初に領収書を添付してご請求</li>
+<li>実費精算のため、使用量に応じて金額が変動します</li>
+</ul>
+<hr>
+<h2 id="%E8%B2%BB%E7%94%A8%E8%A9%B3%E7%B4%B0">費用詳細</h2>
+<h3 id="%E3%83%95%E3%82%A7%E3%83%BC%E3%82%BA%E5%88%A5%E5%B7%A5%E6%95%B0%E3%83%BB%E8%B2%BB%E7%94%A8">フェーズ別工数・費用</h3>
+<table>
+<thead>
+<tr>
+<th>フェーズ</th>
+<th>工数</th>
+<th>金額</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 1: 基盤構築・インフラ</td>
+<td>105h</td>
+<td>¥262,500</td>
+</tr>
+<tr>
+<td>Phase 2: AI会話システム</td>
+<td>165h</td>
+<td>¥412,500</td>
+</tr>
+<tr>
+<td>Phase 3: 音声入出力</td>
+<td>100h</td>
+<td>¥250,000</td>
+</tr>
+<tr>
+<td>Phase 4: Chrome拡張機能</td>
+<td>125h</td>
+<td>¥312,500</td>
+</tr>
+<tr>
+<td>Phase 5: 物件・内見予約管理</td>
+<td>210h</td>
+<td>¥525,000</td>
+</tr>
+<tr>
+<td>Phase 6: 営業メール・マーケティング</td>
+<td>175h</td>
+<td>¥437,500</td>
+</tr>
+<tr>
+<td>Phase 7: オペレーター・管理者機能</td>
+<td>140h</td>
+<td>¥350,000</td>
+</tr>
+<tr>
+<td>Phase 8: テスト・品質保証</td>
+<td>130h</td>
+<td>¥325,000</td>
+</tr>
+<tr>
+<td>Phase 9: デプロイ・ドキュメント</td>
+<td>80h</td>
+<td>¥200,000</td>
+</tr>
+<tr>
+<td><strong>合計</strong></td>
+<td><strong>1,230h</strong></td>
+<td><strong>¥3,075,000</strong></td>
+</tr>
+<tr>
+<td>バッファ・予備時間（15%）</td>
+<td>185h</td>
+<td>¥462,500</td>
+</tr>
+<tr>
+<td><strong>総額（税込）</strong></td>
+<td><strong>1,415h</strong></td>
+<td><strong>¥3,500,000</strong></td>
+</tr>
+</tbody>
+</table>
+<p>※単価: ¥2,500/時間
+※バッファ時間: 予期せぬ問題対応、仕様変更対応、追加テスト等</p>
+<hr>
+<h2 id="%E9%96%8B%E7%99%BA%E3%82%B9%E3%82%B1%E3%82%B8%E3%83%A5%E3%83%BC%E3%83%AB">開発スケジュール</h2>
+<table>
+<thead>
+<tr>
+<th>月</th>
+<th>フェーズ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1ヶ月目</td>
+<td>基盤構築 + AI会話システム</td>
+</tr>
+<tr>
+<td>2ヶ月目</td>
+<td>音声入出力 + Chrome拡張機能</td>
+</tr>
+<tr>
+<td>3ヶ月目</td>
+<td>物件・内見予約管理</td>
+</tr>
+<tr>
+<td>4ヶ月目</td>
+<td>営業メール + オペレーター管理</td>
+</tr>
+<tr>
+<td>5ヶ月目</td>
+<td>テスト・品質保証 + デプロイ</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%E6%88%90%E5%8A%9F%E3%81%AE%E5%AE%9A%E7%BE%A9">成功の定義</h2>
+<p>以下の条件をすべて満たした時点で成功報酬をご請求いたします：</p>
+<ul>
+<li><input type="checkbox" id="checkbox0"><label for="checkbox0">全7機能の実装完了</label></li>
+<li><input type="checkbox" id="checkbox1"><label for="checkbox1">全26画面の実装完了</label></li>
+<li><input type="checkbox" id="checkbox2"><label for="checkbox2">本番環境へのデプロイ完了</label></li>
+<li><input type="checkbox" id="checkbox3"><label for="checkbox3">2週間の試運転・動作確認</label></li>
+<li><input type="checkbox" id="checkbox4"><label for="checkbox4">giyam様による検収・承認</label></li>
+<li><input type="checkbox" id="checkbox5"><label for="checkbox5">操作マニュアル・引き継ぎ完了</label></li>
+</ul>
+<hr>
+<h2 id="%E6%94%AF%E6%89%95%E3%81%84%E3%82%B9%E3%82%B1%E3%82%B8%E3%83%A5%E3%83%BC%E3%83%AB">支払いスケジュール</h2>
+<h3 id="%E9%96%8B%E7%99%BA%E6%9C%9F%E9%96%93%E4%B8%AD1-5%E3%83%B6%E6%9C%88%E7%9B%AE">開発期間中（1-5ヶ月目）</h3>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>月額</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>月額費用（API利用料含む）</td>
+<td>¥100,000</td>
+</tr>
+</tbody>
+</table>
+<h3 id="%E7%B4%8D%E5%93%81%E3%83%BB%E6%A4%9C%E5%8F%8E%E6%99%82">納品・検収時</h3>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>金額</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>成功報酬（一括）</td>
+<td>¥3,000,000</td>
+</tr>
+</tbody>
+</table>
+<h3 id="%E9%81%8B%E7%94%A8%E9%96%8B%E5%A7%8B%E5%BE%8C%E7%B4%8D%E5%93%81%E5%BE%8C">運用開始後（納品後）</h3>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>月額</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>外部API利用料（実費・領収書添付）</td>
+<td>約¥22,450</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%E5%82%99%E8%80%83">備考</h2>
+<ol>
+<li>本見積書は上記有効期限までに限り有効です</li>
+<li>仕様の大幅な変更がある場合は別途お見積りいたします</li>
+<li>開発期間中のAPI利用料は月額費用に含まれます</li>
+<li>納品後のAPI利用料は実費精算とし、領収書を添付してご請求いたします</li>
+<li>詳細は業務委託契約書にて定めます</li>
+</ol>
+<hr>
+<p>ご不明な点がございましたら、お気軽にお問い合わせください。
+何卒よろしくお願い申し上げます。</p>
+
+</body>
+</html>

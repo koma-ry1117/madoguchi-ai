@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>06_業務委託契約書.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="%E6%A5%AD%E5%8B%99%E5%A7%94%E8%A8%97%E5%A5%91%E7%B4%84%E6%9B%B8">業務委託契約書</h1>
+<p><strong>契約番号:</strong> CONTRACT-2025-001
+<strong>契約日:</strong> 2025年12月10日</p>
+<hr>
+<p>株式会社ギヤマン（以下「甲」という）と小松原遼羽（以下「乙」という）は、以下のとおり業務委託契約（以下「本契約」という）を締結する。</p>
+<hr>
+<h2 id="%E7%AC%AC1%E6%9D%A1%E7%9B%AE%E7%9A%84">第1条（目的）</h2>
+<p>甲は乙に対し、下記の業務（以下「本業務」という）を委託し、乙はこれを受託する。</p>
+<hr>
+<h2 id="%E7%AC%AC2%E6%9D%A1%E5%A7%94%E8%A8%97%E6%A5%AD%E5%8B%99%E3%81%AE%E5%86%85%E5%AE%B9">第2条（委託業務の内容）</h2>
+<p>本業務の内容は以下のとおりとする。</p>
+<h3 id="21-%E6%A1%88%E4%BB%B6%E5%90%8D">2.1 案件名</h3>
+<p>不動産AIエージェントシステム開発（madoguchi-ai）</p>
+<h3 id="22-%E6%A5%AD%E5%8B%99%E5%86%85%E5%AE%B9">2.2 業務内容</h3>
+<ol>
+<li>Webアプリケーション（Next.js）の設計・開発</li>
+<li>Chrome拡張機能の設計・開発</li>
+<li>データベース設計・構築</li>
+<li>外部API連携（Google Gemini、OpenAI Whisper、Google Cloud TTS、Resend等）</li>
+<li>テスト実施</li>
+<li>本番環境へのデプロイ</li>
+<li>操作マニュアル作成</li>
+</ol>
+<h3 id="23-%E6%88%90%E6%9E%9C%E7%89%A9">2.3 成果物</h3>
+<ol>
+<li>ソースコード一式</li>
+<li>データベーススキーマ</li>
+<li>Chrome拡張機能</li>
+<li>操作マニュアル</li>
+<li>技術ドキュメント</li>
+</ol>
+<hr>
+<h2 id="%E7%AC%AC3%E6%9D%A1%E5%A5%91%E7%B4%84%E6%9C%9F%E9%96%93">第3条（契約期間）</h2>
+<ol>
+<li>本契約の有効期間は、契約日から成果物の検収完了日までとする。</li>
+<li>開発期間は契約日から5ヶ月間を予定する。</li>
+<li>検収完了後も、第9条（秘密保持）および第11条（知的財産権）の規定は引き続き効力を有する。</li>
+</ol>
+<hr>
+<h2 id="%E7%AC%AC4%E6%9D%A1%E5%A7%94%E8%A8%97%E6%96%99">第4条（委託料）</h2>
+<h3 id="41-%E9%96%8B%E7%99%BA%E8%B2%BB%E7%94%A8">4.1 開発費用</h3>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>金額</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>月額費用</td>
+<td>¥100,000/月 × 5ヶ月 = ¥500,000（API利用料含む）</td>
+</tr>
+<tr>
+<td>成功報酬</td>
+<td>¥3,000,000</td>
+</tr>
+<tr>
+<td><strong>開発費用総額</strong></td>
+<td><strong>¥3,500,000（税込）</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-%E9%96%8B%E7%99%BA%E6%9C%9F%E9%96%93%E4%B8%AD%E3%81%AEapi%E5%88%A9%E7%94%A8%E6%96%99">4.2 開発期間中のAPI利用料</h3>
+<p>開発期間中（5ヶ月間）の外部API利用料は、月額費用（¥100,000）に含まれるものとする。</p>
+<h3 id="43-%E7%B4%8D%E5%93%81%E5%BE%8C%E3%81%AEapi%E5%88%A9%E7%94%A8%E6%96%99%E9%81%8B%E7%94%A8%E9%96%8B%E5%A7%8B%E5%BE%8C">4.3 納品後のAPI利用料（運用開始後）</h3>
+<p>納品・検収完了後の外部API利用料は、乙が立替払いし、領収書を添付の上、毎月実費を請求する。</p>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>月額（目安）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Google Gemini、OpenAI Whisper、Google Cloud TTS、Supabase、Vercel、Resend等</td>
+<td>約¥22,450/月</td>
+</tr>
+</tbody>
+</table>
+<p>※使用量により変動</p>
+<hr>
+<h2 id="%E7%AC%AC5%E6%9D%A1%E6%94%AF%E6%89%95%E6%9D%A1%E4%BB%B6">第5条（支払条件）</h2>
+<ol>
+<li><strong>月額費用</strong>: 毎月末日締め、翌月末日払い（開発期間中のAPI利用料を含む）</li>
+<li><strong>成功報酬</strong>: 第7条に定める検収完了後、30日以内に支払う</li>
+<li><strong>納品後のAPI利用料</strong>: 納品・検収完了後、乙が立替払いし、毎月末日締め、翌月初に領収書を添付して請求する。甲は請求書受領後30日以内に支払う</li>
+<li>支払いは乙の指定する銀行口座への振込とし、振込手数料は甲の負担とする</li>
+</ol>
+<hr>
+<h2 id="%E7%AC%AC6%E6%9D%A1%E7%B4%8D%E5%93%81">第6条（納品）</h2>
+<ol>
+<li>
+<p>乙は、本業務の成果物を以下の方法により甲に納品する。</p>
+<ul>
+<li>GitHubリポジトリへのアクセス権付与</li>
+<li>本番環境へのデプロイ完了</li>
+<li>操作マニュアルの電子データ提供</li>
+</ul>
+</li>
+<li>
+<p>納品予定日は、契約日から5ヶ月後とする。ただし、甲乙協議の上、変更することができる。</p>
+</li>
+</ol>
+<hr>
+<h2 id="%E7%AC%AC7%E6%9D%A1%E6%A4%9C%E5%8F%8E">第7条（検収）</h2>
+<ol>
+<li>甲は、成果物の納品を受けた後、14日以内に検収を行う。</li>
+<li>甲は、成果物が本契約の仕様に適合しない場合、乙に対し修正を求めることができる。</li>
+<li>乙は、甲からの修正依頼を受けた場合、速やかに修正を行い、再度納品する。</li>
+<li>甲が納品後14日以内に書面による異議を申し立てない場合、検収完了とみなす。</li>
+<li>検収完了をもって、成功報酬の支払い義務が発生する。</li>
+</ol>
+<h3 id="71-%E6%A4%9C%E5%8F%8E%E5%9F%BA%E6%BA%96">7.1 検収基準</h3>
+<p>以下の条件をすべて満たすこと：</p>
+<ul>
+<li><input type="checkbox" id="checkbox0"><label for="checkbox0">全7機能の実装完了</label></li>
+<li><input type="checkbox" id="checkbox1"><label for="checkbox1">全26画面の実装完了</label></li>
+<li><input type="checkbox" id="checkbox2"><label for="checkbox2">本番環境での動作確認</label></li>
+<li><input type="checkbox" id="checkbox3"><label for="checkbox3">2週間の試運転・動作確認</label></li>
+<li><input type="checkbox" id="checkbox4"><label for="checkbox4">操作マニュアル提供</label></li>
+</ul>
+<hr>
+<h2 id="%E7%AC%AC8%E6%9D%A1%E7%91%95%E7%96%B5%E6%8B%85%E4%BF%9D%E8%B2%AC%E4%BB%BB">第8条（瑕疵担保責任）</h2>
+<ol>
+<li>乙は、検収完了後3ヶ月間、成果物に瑕疵があった場合、無償で修正する。</li>
+<li>瑕疵とは、要件定義書に記載された機能が正常に動作しないことをいう。</li>
+<li>甲の指示による仕様変更、甲の責に帰すべき事由、または第三者の行為に起因する不具合は瑕疵に含まない。</li>
+</ol>
+<hr>
+<h2 id="%E7%AC%AC9%E6%9D%A1%E7%A7%98%E5%AF%86%E4%BF%9D%E6%8C%81">第9条（秘密保持）</h2>
+<ol>
+<li>
+<p>甲および乙は、本契約の履行に関連して知り得た相手方の技術上、営業上の秘密情報を、相手方の書面による事前の承諾なく第三者に開示・漏洩してはならない。</p>
+</li>
+<li>
+<p>秘密情報には以下を含む：</p>
+<ul>
+<li>システムの設計・仕様に関する情報</li>
+<li>顧客データ</li>
+<li>ビジネス戦略・計画</li>
+<li>未公開の財務情報</li>
+</ul>
+</li>
+<li>
+<p>以下の情報は秘密情報に含まない：</p>
+<ul>
+<li>開示時点で既に公知であった情報</li>
+<li>開示後、受領者の責によらず公知となった情報</li>
+<li>開示前から受領者が正当に保有していた情報</li>
+<li>第三者から秘密保持義務を負うことなく正当に取得した情報</li>
+</ul>
+</li>
+<li>
+<p>本条の義務は、本契約終了後も3年間存続する。</p>
+</li>
+</ol>
+<hr>
+<h2 id="%E7%AC%AC10%E6%9D%A1%E5%80%8B%E4%BA%BA%E6%83%85%E5%A0%B1%E3%81%AE%E5%8F%96%E6%89%B1%E3%81%84">第10条（個人情報の取扱い）</h2>
+<ol>
+<li>乙は、本業務の遂行にあたり甲から提供される個人情報を、本業務の目的以外に使用しない。</li>
+<li>乙は、個人情報を適切に管理し、第三者への漏洩を防止する措置を講じる。</li>
+<li>乙は、本業務終了後、個人情報を速やかに返却または破棄する。</li>
+</ol>
+<hr>
+<h2 id="%E7%AC%AC11%E6%9D%A1%E7%9F%A5%E7%9A%84%E8%B2%A1%E7%94%A3%E6%A8%A9">第11条（知的財産権）</h2>
+<ol>
+<li>
+<p>本業務により生じた成果物の著作権（著作権法第27条および第28条の権利を含む）は、検収完了および委託料全額の支払い完了をもって、乙から甲に移転する。</p>
+</li>
+<li>
+<p>以下は移転の対象外とする：</p>
+<ul>
+<li>乙が本契約締結前から保有していた著作物</li>
+<li>オープンソースソフトウェア</li>
+<li>汎用的なライブラリ・ツール</li>
+</ul>
+</li>
+<li>
+<p>乙は、成果物について著作者人格権を行使しない。</p>
+</li>
+</ol>
+<hr>
+<h2 id="%E7%AC%AC12%E6%9D%A1%E5%86%8D%E5%A7%94%E8%A8%97">第12条（再委託）</h2>
+<ol>
+<li>乙は、本業務の全部または一部を第三者に再委託することができる。</li>
+<li>再委託する場合、乙は再委託先に対して本契約と同等の義務を負わせる。</li>
+<li>再委託先の行為について、乙は甲に対して責任を負う。</li>
+</ol>
+<hr>
+<h2 id="%E7%AC%AC13%E6%9D%A1%E5%A5%91%E7%B4%84%E8%A7%A3%E9%99%A4">第13条（契約解除）</h2>
+<ol>
+<li>
+<p>甲または乙は、相手方が以下のいずれかに該当した場合、催告なく本契約を解除できる：</p>
+<ul>
+<li>本契約に違反し、相当期間を定めて催告しても是正されない場合</li>
+<li>差押え、仮差押え、仮処分、強制執行、競売の申立てを受けた場合</li>
+<li>破産手続開始、民事再生手続開始、会社更生手続開始の申立てを受けた場合</li>
+<li>手形・小切手の不渡りを出した場合</li>
+</ul>
+</li>
+<li>
+<p>甲の都合により本契約を解除する場合、甲は乙に対し、解除時点までの業務に対する報酬を支払う。</p>
+</li>
+</ol>
+<hr>
+<h2 id="%E7%AC%AC14%E6%9D%A1%E6%90%8D%E5%AE%B3%E8%B3%A0%E5%84%9F">第14条（損害賠償）</h2>
+<ol>
+<li>甲または乙は、本契約に違反して相手方に損害を与えた場合、その損害を賠償する。</li>
+<li>損害賠償の範囲は、直接損害に限り、間接損害・逸失利益は含まない。</li>
+<li>損害賠償の上限は、本契約の委託料総額とする。</li>
+</ol>
+<hr>
+<h2 id="%E7%AC%AC15%E6%9D%A1%E4%B8%8D%E5%8F%AF%E6%8A%97%E5%8A%9B">第15条（不可抗力）</h2>
+<p>天災地変、戦争、暴動、法令の改廃その他の不可抗力により本契約の履行が困難になった場合、甲乙いずれも相手方に対する責任を負わない。</p>
+<hr>
+<h2 id="%E7%AC%AC16%E6%9D%A1%E5%8F%8D%E7%A4%BE%E4%BC%9A%E7%9A%84%E5%8B%A2%E5%8A%9B%E3%81%AE%E6%8E%92%E9%99%A4">第16条（反社会的勢力の排除）</h2>
+<ol>
+<li>甲および乙は、自らが反社会的勢力でないことを表明・保証する。</li>
+<li>甲または乙は、相手方が反社会的勢力であることが判明した場合、催告なく本契約を解除できる。</li>
+</ol>
+<hr>
+<h2 id="%E7%AC%AC17%E6%9D%A1%E5%8D%94%E8%AD%B0%E4%BA%8B%E9%A0%85">第17条（協議事項）</h2>
+<p>本契約に定めのない事項または疑義が生じた事項については、甲乙協議の上、誠意をもって解決する。</p>
+<hr>
+<h2 id="%E7%AC%AC18%E6%9D%A1%E6%BA%96%E6%8B%A0%E6%B3%95%E3%81%8A%E3%82%88%E3%81%B3%E7%AE%A1%E8%BD%84%E8%A3%81%E5%88%A4%E6%89%80">第18条（準拠法および管轄裁判所）</h2>
+<ol>
+<li>本契約の準拠法は日本法とする。</li>
+<li>本契約に関する紛争については、相模原地方裁判所を第一審の専属的合意管轄裁判所とする。</li>
+</ol>
+<hr>
+<h2 id="%E7%BD%B2%E5%90%8D%E6%AC%84">署名欄</h2>
+<p>本契約の成立を証するため、本書2通を作成し、甲乙記名捺印の上、各1通を保有する。</p>
+<h3 id="%E7%94%B2%E7%99%BA%E6%B3%A8%E8%80%85">甲（発注者）</h3>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>会社名</td>
+<td>株式会社ギヤマン</td>
+</tr>
+<tr>
+<td>住所</td>
+<td>〒113-0033 東京都文京区本郷3-44-7</td>
+</tr>
+<tr>
+<td>署名</td>
+<td>__________________</td>
+</tr>
+<tr>
+<td>日付</td>
+<td>____年____月____日</td>
+</tr>
+</tbody>
+</table>
+<h3 id="%E4%B9%99%E5%8F%97%E6%B3%A8%E8%80%85">乙（受注者）</h3>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>屋号</td>
+<td>KomaTech</td>
+</tr>
+<tr>
+<td>氏名</td>
+<td>小松原遼羽</td>
+</tr>
+<tr>
+<td>住所</td>
+<td>〒252-0331 神奈川県相模原市南区大野台5-7-17</td>
+</tr>
+<tr>
+<td>署名</td>
+<td>__________________</td>
+</tr>
+<tr>
+<td>日付</td>
+<td>____年____月____日</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%E5%88%A5%E7%B4%99">別紙</h2>
+<ul>
+<li>別紙1: 要件定義書</li>
+<li>別紙2: システム設計書</li>
+<li>別紙3: 開発スケジュール</li>
+<li>別紙4: 画面構成一覧</li>
+<li>別紙5: 御見積書</li>
+</ul>
+
+</body>
+</html>

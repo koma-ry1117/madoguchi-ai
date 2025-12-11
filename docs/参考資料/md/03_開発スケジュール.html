@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>03_開発スケジュール.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="%E9%96%8B%E7%99%BA%E3%82%B9%E3%82%B1%E3%82%B8%E3%83%A5%E3%83%BC%E3%83%AB">開発スケジュール</h1>
+<p><strong>案件名:</strong> 不動産AIエージェントシステム（madoguchi-ai）
+<strong>発行日:</strong> 2025年12月7日
+<strong>バージョン:</strong> 1.0
+<strong>作成者:</strong> 小松原遼羽</p>
+<hr>
+<h2 id="1-%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%E6%A6%82%E8%A6%81">1. プロジェクト概要</h2>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>開発期間</td>
+<td>5ヶ月</td>
+</tr>
+<tr>
+<td>開始予定</td>
+<td>契約締結後</td>
+</tr>
+<tr>
+<td>完了予定</td>
+<td>開始から5ヶ月後</td>
+</tr>
+<tr>
+<td>総工数</td>
+<td>約1,230時間</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2-%E3%83%95%E3%82%A7%E3%83%BC%E3%82%BA%E5%88%A5%E3%82%B9%E3%82%B1%E3%82%B8%E3%83%A5%E3%83%BC%E3%83%AB">2. フェーズ別スケジュール</h2>
+<h3 id="%E5%85%A8%E4%BD%93%E3%82%BF%E3%82%A4%E3%83%A0%E3%83%A9%E3%82%A4%E3%83%B3">全体タイムライン</h3>
+<pre><code class="language-mermaid"><div class="mermaid">gantt
+    title 開発スケジュール（5ヶ月）
+    dateFormat YYYY-MM-DD
+    axisFormat %Y/%m
+
+    section Phase1-2
+    基盤構築              :p1, 2025-12-07, 2w
+    AI会話システム        :p2, 2025-12-21, 2w
+
+    section Phase3-4
+    音声入出力            :p3, 2026-01-04, 2w
+    Chrome拡張機能        :p4, 2026-01-18, 2w
+
+    section Phase5
+    物件予約管理          :p5, 2026-02-01, 4w
+
+    section Phase6-7
+    メール配信            :p6, 2026-03-01, 2w
+    管理者機能            :p7, 2026-03-15, 2w
+
+    section Phase8-9
+    テスト                :p8, 2026-04-01, 2w
+    デプロイ              :p9, 2026-04-15, 2w
+
+    section Milestone
+    M1 基盤完了           :milestone, m1, 2026-01-06, 0d
+    M2 コア機能完了       :milestone, m2, 2026-02-03, 0d
+    M3 管理機能完了       :milestone, m3, 2026-03-03, 0d
+    M4 全機能完了         :milestone, m4, 2026-03-31, 0d
+    M5 リリース           :milestone, m5, 2026-05-06, 0d
+</div></code></pre>
+<hr>
+<h2 id="3-%E5%90%84%E3%83%95%E3%82%A7%E3%83%BC%E3%82%BA%E3%81%AE%E8%A9%B3%E7%B4%B0">3. 各フェーズの詳細</h2>
+<h3 id="phase-1-%E5%9F%BA%E7%9B%A4%E6%A7%8B%E7%AF%89%E3%83%BB%E3%82%A4%E3%83%B3%E3%83%95%E3%83%A91%E3%83%B6%E6%9C%88%E7%9B%AE%E5%89%8D%E5%8D%8A">Phase 1: 基盤構築・インフラ（1ヶ月目前半）</h3>
+<table>
+<thead>
+<tr>
+<th>タスク</th>
+<th>工数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>プロジェクトセットアップ</td>
+<td>15h</td>
+<td>Next.js 15、TypeScript、pnpm</td>
+</tr>
+<tr>
+<td>データベース設計・実装</td>
+<td>40h</td>
+<td>PostgreSQL + pgvector</td>
+</tr>
+<tr>
+<td>マルチテナント構造・RLS</td>
+<td>30h</td>
+<td>Row Level Security設定</td>
+</tr>
+<tr>
+<td>認証基盤</td>
+<td>20h</td>
+<td>Supabase Auth設定</td>
+</tr>
+<tr>
+<td><strong>小計</strong></td>
+<td><strong>105h</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>成果物:</strong></p>
+<ul>
+<li>動作する開発環境</li>
+<li>データベーススキーマ</li>
+<li>認証機能</li>
+</ul>
+<hr>
+<h3 id="phase-2-ai%E4%BC%9A%E8%A9%B1%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A01%E3%83%B6%E6%9C%88%E7%9B%AE%E5%BE%8C%E5%8D%8A">Phase 2: AI会話システム（1ヶ月目後半）</h3>
+<table>
+<thead>
+<tr>
+<th>タスク</th>
+<th>工数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>キオスクセッション管理</td>
+<td>15h</td>
+<td>Zustand状態管理</td>
+</tr>
+<tr>
+<td>GPT-4o統合</td>
+<td>40h</td>
+<td>Function Calling実装</td>
+</tr>
+<tr>
+<td>AI System Prompt設計</td>
+<td>20h</td>
+<td>会話シナリオ設計</td>
+</tr>
+<tr>
+<td>会話UI</td>
+<td>35h</td>
+<td>メッセージ、物件カード表示</td>
+</tr>
+<tr>
+<td>連絡先入力・予約完了フロー</td>
+<td>25h</td>
+<td>フォーム実装</td>
+</tr>
+<tr>
+<td>アバター感情表現</td>
+<td>30h</td>
+<td>5種類のアニメーション</td>
+</tr>
+<tr>
+<td><strong>小計</strong></td>
+<td><strong>165h</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>成果物:</strong></p>
+<ul>
+<li>キオスク画面（動作版）</li>
+<li>AI会話機能</li>
+<li>内見予約フロー</li>
+</ul>
+<hr>
+<h3 id="phase-3-%E9%9F%B3%E5%A3%B0%E5%85%A5%E5%87%BA%E5%8A%9B2%E3%83%B6%E6%9C%88%E7%9B%AE%E5%89%8D%E5%8D%8A">Phase 3: 音声入出力（2ヶ月目前半）</h3>
+<table>
+<thead>
+<tr>
+<th>タスク</th>
+<th>工数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>音声入力</td>
+<td>30h</td>
+<td>Whisper API統合</td>
+</tr>
+<tr>
+<td>音声出力</td>
+<td>30h</td>
+<td>ElevenLabs API統合</td>
+</tr>
+<tr>
+<td>音声キャッシング</td>
+<td>20h</td>
+<td>Supabase Storage連携</td>
+</tr>
+<tr>
+<td>音声コントロールUI</td>
+<td>20h</td>
+<td>再生/停止、音量調整</td>
+</tr>
+<tr>
+<td><strong>小計</strong></td>
+<td><strong>100h</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>成果物:</strong></p>
+<ul>
+<li>音声入力機能</li>
+<li>音声読み上げ機能</li>
+<li>音声キャッシュシステム</li>
+</ul>
+<hr>
+<h3 id="phase-4-chrome%E6%8B%A1%E5%BC%B5%E6%A9%9F%E8%83%BD2%E3%83%B6%E6%9C%88%E7%9B%AE%E5%BE%8C%E5%8D%8A">Phase 4: Chrome拡張機能（2ヶ月目後半）</h3>
+<table>
+<thead>
+<tr>
+<th>タスク</th>
+<th>工数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>拡張機能プロジェクト構成</td>
+<td>15h</td>
+<td>Manifest V3設定</td>
+</tr>
+<tr>
+<td>Content Script</td>
+<td>20h</td>
+<td>物件ページ検出</td>
+</tr>
+<tr>
+<td>Background Service Worker</td>
+<td>25h</td>
+<td>API通信処理</td>
+</tr>
+<tr>
+<td>Popup UI</td>
+<td>20h</td>
+<td>React実装</td>
+</tr>
+<tr>
+<td>GPT-4o構造化抽出</td>
+<td>30h</td>
+<td>物件情報抽出ロジック</td>
+</tr>
+<tr>
+<td>HTMLスナップショット保存</td>
+<td>15h</td>
+<td>証跡保存</td>
+</tr>
+<tr>
+<td><strong>小計</strong></td>
+<td><strong>125h</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>成果物:</strong></p>
+<ul>
+<li>Chrome拡張機能（アットホーム対応）</li>
+<li>物件自動取り込み機能</li>
+</ul>
+<hr>
+<h3 id="phase-5-%E7%89%A9%E4%BB%B6%E3%83%BB%E5%86%85%E8%A6%8B%E4%BA%88%E7%B4%84%E7%AE%A1%E7%90%863%E3%83%B6%E6%9C%88%E7%9B%AE">Phase 5: 物件・内見予約管理（3ヶ月目）</h3>
+<table>
+<thead>
+<tr>
+<th>タスク</th>
+<th>工数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PropertyService実装</td>
+<td>25h</td>
+<td>ビジネスロジック</td>
+</tr>
+<tr>
+<td>物件API</td>
+<td>30h</td>
+<td>CRUD操作</td>
+</tr>
+<tr>
+<td>物件管理UI</td>
+<td>40h</td>
+<td>一覧・詳細・編集画面</td>
+</tr>
+<tr>
+<td>ViewingService実装</td>
+<td>25h</td>
+<td>ビジネスロジック</td>
+</tr>
+<tr>
+<td>内見予約API</td>
+<td>30h</td>
+<td>予約処理</td>
+</tr>
+<tr>
+<td>ICS生成・カレンダー招待</td>
+<td>15h</td>
+<td>.icsファイル生成</td>
+</tr>
+<tr>
+<td>内見管理UI</td>
+<td>35h</td>
+<td>予約一覧・詳細画面</td>
+</tr>
+<tr>
+<td>リマインダーCronジョブ</td>
+<td>10h</td>
+<td>自動リマインダー</td>
+</tr>
+<tr>
+<td><strong>小計</strong></td>
+<td><strong>210h</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>成果物:</strong></p>
+<ul>
+<li>物件管理画面</li>
+<li>内見予約管理画面</li>
+<li>カレンダー招待機能</li>
+</ul>
+<hr>
+<h3 id="phase-6-%E5%96%B6%E6%A5%AD%E3%83%A1%E3%83%BC%E3%83%AB%E3%83%BB%E3%83%9E%E3%83%BC%E3%82%B1%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B04%E3%83%B6%E6%9C%88%E7%9B%AE%E5%89%8D%E5%8D%8A">Phase 6: 営業メール・マーケティング（4ヶ月目前半）</h3>
+<table>
+<thead>
+<tr>
+<th>タスク</th>
+<th>工数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>データベースマイグレーション</td>
+<td>20h</td>
+<td>4テーブル追加</td>
+</tr>
+<tr>
+<td>配信停止管理サービス</td>
+<td>25h</td>
+<td>バウンス処理</td>
+</tr>
+<tr>
+<td>メールキューサービス</td>
+<td>30h</td>
+<td>リトライ機能</td>
+</tr>
+<tr>
+<td>キャンペーンサービス</td>
+<td>30h</td>
+<td>一括配信</td>
+</tr>
+<tr>
+<td>Resend Webhook連携</td>
+<td>20h</td>
+<td>イベント受信</td>
+</tr>
+<tr>
+<td>キャンペーンAPI・UI</td>
+<td>35h</td>
+<td>管理画面</td>
+</tr>
+<tr>
+<td>キューワーカー</td>
+<td>15h</td>
+<td>Vercel Cron</td>
+</tr>
+<tr>
+<td><strong>小計</strong></td>
+<td><strong>175h</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>成果物:</strong></p>
+<ul>
+<li>キャンペーン管理画面</li>
+<li>メール配信機能</li>
+<li>配信停止管理</li>
+</ul>
+<hr>
+<h3 id="phase-7-%E3%82%AA%E3%83%9A%E3%83%AC%E3%83%BC%E3%82%BF%E3%83%BC%E3%83%BB%E7%AE%A1%E7%90%86%E8%80%85%E6%A9%9F%E8%83%BD4%E3%83%B6%E6%9C%88%E7%9B%AE%E5%BE%8C%E5%8D%8A">Phase 7: オペレーター・管理者機能（4ヶ月目後半）</h3>
+<table>
+<thead>
+<tr>
+<th>タスク</th>
+<th>工数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OperatorService実装</td>
+<td>25h</td>
+<td>ビジネスロジック</td>
+</tr>
+<tr>
+<td>StatsService実装</td>
+<td>20h</td>
+<td>統計計算</td>
+</tr>
+<tr>
+<td>管理者API</td>
+<td>30h</td>
+<td>オペレーター管理</td>
+</tr>
+<tr>
+<td>管理者ダッシュボード</td>
+<td>35h</td>
+<td>統計表示</td>
+</tr>
+<tr>
+<td>オペレーター管理UI</td>
+<td>30h</td>
+<td>登録・編集画面</td>
+</tr>
+<tr>
+<td><strong>小計</strong></td>
+<td><strong>140h</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>成果物:</strong></p>
+<ul>
+<li>管理者ダッシュボード</li>
+<li>オペレーター管理画面</li>
+<li>システム統計機能</li>
+</ul>
+<hr>
+<h3 id="phase-8-%E3%83%86%E3%82%B9%E3%83%88%E3%83%BB%E5%93%81%E8%B3%AA%E4%BF%9D%E8%A8%BC5%E3%83%B6%E6%9C%88%E7%9B%AE%E5%89%8D%E5%8D%8A">Phase 8: テスト・品質保証（5ヶ月目前半）</h3>
+<table>
+<thead>
+<tr>
+<th>タスク</th>
+<th>工数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>単体テスト</td>
+<td>40h</td>
+<td>Vitest</td>
+</tr>
+<tr>
+<td>統合テスト</td>
+<td>35h</td>
+<td>API・サービス間連携</td>
+</tr>
+<tr>
+<td>E2Eテスト</td>
+<td>30h</td>
+<td>Playwright</td>
+</tr>
+<tr>
+<td>品質保証・バグ修正</td>
+<td>25h</td>
+<td>最終調整</td>
+</tr>
+<tr>
+<td><strong>小計</strong></td>
+<td><strong>130h</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>成果物:</strong></p>
+<ul>
+<li>テストコード一式</li>
+<li>バグ修正完了</li>
+</ul>
+<hr>
+<h3 id="phase-9-%E3%83%87%E3%83%97%E3%83%AD%E3%82%A4%E3%83%BB%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%885%E3%83%B6%E6%9C%88%E7%9B%AE%E5%BE%8C%E5%8D%8A">Phase 9: デプロイ・ドキュメント（5ヶ月目後半）</h3>
+<table>
+<thead>
+<tr>
+<th>タスク</th>
+<th>工数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vercelデプロイ設定</td>
+<td>20h</td>
+<td>本番環境構築</td>
+</tr>
+<tr>
+<td>Supabase本番環境設定</td>
+<td>15h</td>
+<td>本番DB設定</td>
+</tr>
+<tr>
+<td>セキュリティ対策・監査</td>
+<td>25h</td>
+<td>脆弱性チェック</td>
+</tr>
+<tr>
+<td>操作マニュアル作成</td>
+<td>20h</td>
+<td>ユーザー向けドキュメント</td>
+</tr>
+<tr>
+<td><strong>小計</strong></td>
+<td><strong>80h</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>成果物:</strong></p>
+<ul>
+<li>本番環境</li>
+<li>操作マニュアル</li>
+<li>引き継ぎ資料</li>
+</ul>
+<hr>
+<h2 id="4-%E3%83%9E%E3%82%A4%E3%83%AB%E3%82%B9%E3%83%88%E3%83%BC%E3%83%B3">4. マイルストーン</h2>
+<table>
+<thead>
+<tr>
+<th>マイルストーン</th>
+<th>時期</th>
+<th>確認事項</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>M1: 基盤完了</strong></td>
+<td>1ヶ月目終了</td>
+<td>開発環境、認証、キオスク基本動作</td>
+</tr>
+<tr>
+<td><strong>M2: コア機能完了</strong></td>
+<td>2ヶ月目終了</td>
+<td>音声対応、Chrome拡張動作</td>
+</tr>
+<tr>
+<td><strong>M3: 管理機能完了</strong></td>
+<td>3ヶ月目終了</td>
+<td>物件・予約管理画面</td>
+</tr>
+<tr>
+<td><strong>M4: 全機能完了</strong></td>
+<td>4ヶ月目終了</td>
+<td>メール配信、管理者機能</td>
+</tr>
+<tr>
+<td><strong>M5: リリース</strong></td>
+<td>5ヶ月目終了</td>
+<td>テスト完了、本番デプロイ</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="5-%E9%80%B2%E6%8D%97%E5%A0%B1%E5%91%8A">5. 進捗報告</h2>
+<table>
+<thead>
+<tr>
+<th>報告種類</th>
+<th>頻度</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>週次報告</td>
+<td>毎週</td>
+<td>進捗状況、課題、次週予定</td>
+</tr>
+<tr>
+<td>マイルストーン報告</td>
+<td>各M時</td>
+<td>成果物確認、デモ</td>
+</tr>
+<tr>
+<td>月次報告</td>
+<td>毎月</td>
+<td>工数実績、予算消化状況</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="6-%E3%83%AA%E3%82%B9%E3%82%AF%E3%81%A8%E5%AF%BE%E7%AD%96">6. リスクと対策</h2>
+<table>
+<thead>
+<tr>
+<th>リスク</th>
+<th>影響</th>
+<th>対策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>外部API仕様変更</td>
+<td>機能不具合</td>
+<td>最新ドキュメント確認、早期テスト</td>
+</tr>
+<tr>
+<td>想定外の技術課題</td>
+<td>スケジュール遅延</td>
+<td>バッファ時間を確保（15%）</td>
+</tr>
+<tr>
+<td>要件変更</td>
+<td>工数増加</td>
+<td>変更管理プロセスを設定</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="7-%E6%89%BF%E8%AA%8D">7. 承認</h2>
+<p>本開発スケジュールの内容について確認・承認いたします。</p>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>甲</td>
+<td>株式会社ギヤマン</td>
+</tr>
+<tr>
+<td>記名捺印</td>
+<td>__________________</td>
+</tr>
+<tr>
+<td>日付</td>
+<td>____年____月____日</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>乙</td>
+<td>小松原遼羽</td>
+</tr>
+<tr>
+<td>署名捺印</td>
+<td>__________________</td>
+</tr>
+<tr>
+<td>日付</td>
+<td>____年____月____日</td>
+</tr>
+</tbody>
+</table>
+
+</body>
+</html>
