@@ -1,241 +1,185 @@
-# Implementation Tasks
+# Tasks Document
 
-## Task 1: PropertyService実装
+## タスク一覧
 
-### Description
-物件データアクセスのサービスレイヤー
+### 1. データベーススキーマとRLS設定 _Requirements: 1, 2, 3, 4, 5, 6_
+オペレーターごとに物件データを分離し、検索性能を確保するテーブルとインデックスを構築する。
 
-### Files to Create/Modify
-- `src/lib/services/property-service.ts` (create)
-- `src/schemas/property.ts` (create)
+- 1.1 物件テーブル（properties）とpgvector拡張を作成する _Requirements: 5_ (P)
+  - propertiesテーブル定義（id, operator_id, title, address, area, transaction_type, rent, sale_price, layout, building_type, floor_area, station, distance_from_station, description, amenities, is_public, created_at, updated_at）
+  - pgvectorエクステンションを有効化
+  - セマンティック検索用のembeddingカラム（vector(1536)）を追加
+  - 検索性能のためのインデックスを作成（operator_id, is_public, area, rent, layout）
 
-### Implementation Details
-1. getProperties: 一覧取得（フィルタリング対応）
-2. getPropertyById: 詳細取得
-3. updateProperty: 更新（オペレーター用）
-4. deleteProperty: 削除（オペレーター用）
-5. Zodスキーマ定義
+- 1.2 物件画像テーブル（property_images）とストレージを設定する _Requirements: 4_ (P)
+  - property_imagesテーブル定義（id, property_id, storage_path, display_order）
+  - Supabase Storage バケット設定（properties-images）
+  - 画像アップロード用のRLSポリシー設定
 
-### Acceptance Criteria
-- [ ] CRUD操作が機能する
-- [ ] RLSが適用される
+- 1.3 RLSポリシーを実装する _Requirements: 6_
+  - オペレーター向けポリシー: 自社物件のみCRUD可能
+  - 管理者向けポリシー: 全物件CRUD可能
+  - テストデータでRLS動作を検証
 
----
+### 2. API Routes実装 _Requirements: 1, 2, 3, 4, 5_
+オペレーターが物件を管理し、キオスクAIが物件を検索できるAPIエンドポイントを実装する。
 
-## Task 2: GET /api/properties APIルート
+- 2.1 GET /api/properties を実装する _Requirements: 1, 2_ (P)
+  - クエリパラメータによるフィルタリング（area, rent_min, rent_max, layout, building_type, keyword）
+  - ページネーション（page, limit）
+  - ソート機能（新着順・更新順）
+  - RLSによるoperator_idフィルタリング
 
-### Description
-物件一覧取得API（フィルタリング・ページネーション対応）
+- 2.2 GET /api/properties/[id] を実装する _Requirements: 3_ (P)
+  - IDによる物件詳細取得
+  - 画像リレーションの取得
+  - RLSチェック
 
-### Files to Create/Modify
-- `app/api/properties/route.ts` (create)
+- 2.3 POST /api/properties を実装する _Requirements: 4_
+  - 物件登録エンドポイント
+  - バリデーション（必須項目チェック）
+  - operator_idの自動設定
+  - 画像アップロード処理
+  - トランザクション管理
 
-### Implementation Details
-1. クエリパラメータ解析
-2. Supabaseクエリ構築
-3. ページネーション計算
-4. レスポンス整形
+- 2.4 PATCH /api/properties/[id] を実装する _Requirements: 3_
+  - 物件更新エンドポイント
+  - 部分更新サポート（title, rent, is_public等）
+  - 編集履歴の記録
+  - RLSチェック
 
-### Acceptance Criteria
-- [ ] フィルターが機能する
-- [ ] ページネーションが機能する
+- 2.5 DELETE /api/properties/[id] を実装する _Requirements: 3_ (P)
+  - 物件削除エンドポイント
+  - 関連画像の削除
+  - ソフトデリート検討
+  - RLSチェック
 
----
+- 2.6 POST /api/kiosk/search を実装する _Requirements: 5_ (P)
+  - キオスクAI会話用の物件検索API
+  - operator_idフィルター（必須）
+  - is_public=trueのみ検索対象
+  - pgvectorによるセマンティック検索
+  - Service Role Keyでアクセス（認証バイパス）
 
-## Task 3: GET /api/properties/[id] APIルート
+### 3. フロントエンド実装（オペレーター向け物件管理） _Requirements: 1, 2, 3, 4_
+オペレーターが物件を一覧・検索・編集できるUIを実装する。
 
-### Description
-物件詳細取得API
+- 3.1 PropertyCardコンポーネントを作成する _Requirements: 1_ (P)
+  - shadcn/uiベースのカードUI
+  - 物件画像、タイトル、価格、間取り、エリア、ステータス表示
+  - クリックイベントハンドラー
+  - レスポンシブ対応
 
-### Files to Create/Modify
-- `app/api/properties/[id]/route.ts` (create)
+- 3.2 PropertyFilterコンポーネントを作成する _Requirements: 2_ (P)
+  - エリア、予算範囲、間取り、公開ステータスのフィルターUI
+  - キーワード検索入力フィールド
+  - フィルター状態管理（useState）
+  - フィルター変更時のコールバック
 
-### Implementation Details
-1. IDで物件取得
-2. 画像情報を含めて取得
-3. RLSでアクセス制御
+- 3.3 物件一覧ページ（/dashboard/properties）を実装する _Requirements: 1, 2_
+  - PropertyCardを使用した一覧表示
+  - PropertyFilterの統合
+  - TanStack Queryによるデータフェッチ
+  - ページネーションUI
+  - ソート切り替え（新着順・更新順）
+  - ローディング・エラー状態の処理
 
-### Acceptance Criteria
-- [ ] 詳細が取得できる
-- [ ] 画像が含まれる
+- 3.4 物件詳細ページ（/dashboard/properties/[id]）を実装する _Requirements: 3_
+  - 物件詳細情報の表示
+  - 画像ギャラリー（Next.js Image）
+  - 編集ボタン・削除ボタン
+  - 公開/非公開切り替えUI
+  - TanStack Queryによるデータフェッチ
 
----
+- 3.5 物件編集フォーム（PropertyEditor）を実装する _Requirements: 3, 4_
+  - 全フィールドの編集フォーム
+  - バリデーション（React Hook Form + Zod）
+  - 画像アップロードUI（複数画像対応、ドラッグ&ドロップ）
+  - プレビュー機能
+  - 保存・キャンセルボタン
+  - TanStack Queryによる楽観的更新
 
-## Task 4: PATCH /api/properties/[id] APIルート
+- 3.6 物件登録ページ（/dashboard/properties/new）を実装する _Requirements: 4_
+  - PropertyEditorを再利用
+  - 新規登録モード
+  - 登録完了メッセージ
+  - 登録後に詳細ページへリダイレクト
 
-### Description
-物件更新API（オペレーター用）
+### 4. テスト実装 _Requirements: 1, 2, 3, 4, 5, 6_
+各機能の品質を保証するテストを実装する。
 
-### Files to Create/Modify
-- `app/api/properties/[id]/route.ts` (modify)
+- 4.1 APIルートのインテグレーションテストを作成する (P)
+  - GET /api/properties: フィルタリング、ページネーション、RLS
+  - POST /api/properties: バリデーション、画像アップロード
+  - PATCH /api/properties/[id]: 更新、RLS
+  - DELETE /api/properties/[id]: 削除、RLS
+  - POST /api/kiosk/search: セマンティック検索、operator_idフィルター
 
-### Implementation Details
-1. 認証・認可チェック
-2. バリデーション
-3. 更新実行
+- 4.2 フロントエンドコンポーネントのユニットテストを作成する (P)
+  - PropertyCard: 表示内容、クリックイベント
+  - PropertyFilter: フィルター変更、バリデーション
+  - PropertyEditor: フォームバリデーション、画像アップロード
 
-### Acceptance Criteria
-- [ ] オペレーターが更新できる
-- [ ] 他社の物件は更新不可
+- 4.3 E2Eテストを作成する
+  - オペレーター: 物件一覧 → フィルター適用 → 詳細表示
+  - オペレーター: 物件登録 → 編集 → 削除
+  - マルチテナント: オペレーターAがオペレーターBの物件を見れないことを確認
+  - 管理者: 全物件閲覧可能を確認
 
----
+### 5. パフォーマンス最適化 _Requirements: 1, 5_
+検索性能と画像読み込みを最適化する。
 
-## Task 5: useProperties Hook
+- 5.1 データベースインデックスの最適化 _Requirements: 1, 2, 5_ (P)
+  - 複合インデックスの作成（area, rent, layout）
+  - pgvectorインデックスの作成（IVFFlatまたはHNSW）
+  - EXPLAIN ANALYZEで性能検証
 
-### Description
-物件データ取得のカスタムフック
+- 5.2 画像最適化を実装する _Requirements: 1, 4_ (P)
+  - Next.js Imageコンポーネントの適用
+  - WebP変換（Supabase Storage設定）
+  - 遅延読み込み（lazy loading）
+  - サムネイル生成（一覧用）
 
-### Files to Create/Modify
-- `src/lib/hooks/useProperties.ts` (create)
-- `src/lib/hooks/useProperty.ts` (create)
+- 5.3 TanStack Queryキャッシュ戦略を設定する _Requirements: 1, 2, 3_
+  - staleTime、cacheTimeの調整
+  - 楽観的更新（Optimistic Updates）
+  - プリフェッチ（ページネーション先読み）
 
-### Implementation Details
-1. TanStack Query使用
-2. キャッシュ設定（5分）
-3. フィルター変更時の再取得
+### 6. ドキュメント・デプロイ準備
+実装内容を文書化し、デプロイ準備を行う。
 
-### Acceptance Criteria
-- [ ] データが取得できる
-- [ ] キャッシュが機能する
+- 6.1 API仕様書を作成する (P)
+  - OpenAPI/Swaggerドキュメント
+  - リクエスト/レスポンス例
+  - エラーコード一覧
 
----
+- 6.2 運用ドキュメントを作成する (P)
+  - オペレーター向け操作マニュアル
+  - 管理者向け運用ガイド
+  - トラブルシューティング
 
-## Task 6: PropertyCardコンポーネント
-
-### Description
-物件カード表示コンポーネント
-
-### Files to Create/Modify
-- `src/components/features/properties/PropertyCard.tsx` (create)
-
-### Implementation Details
-1. サムネイル画像表示
-2. タイトル、価格、間取り表示
-3. エリア、駅徒歩表示
-4. クリックハンドラー
-
-### Acceptance Criteria
-- [ ] 情報が正しく表示される
-- [ ] クリックで詳細に遷移
-
----
-
-## Task 7: PropertyListコンポーネント
-
-### Description
-物件一覧表示コンポーネント
-
-### Files to Create/Modify
-- `src/components/features/properties/PropertyList.tsx` (create)
-
-### Implementation Details
-1. グリッドレイアウト
-2. ローディング状態
-3. 空状態
-4. ページネーションUI
-
-### Acceptance Criteria
-- [ ] 一覧が表示される
-- [ ] レスポンシブ対応
-
----
-
-## Task 8: PropertyFilterコンポーネント
-
-### Description
-検索フィルターコンポーネント
-
-### Files to Create/Modify
-- `src/components/features/properties/PropertyFilter.tsx` (create)
-
-### Implementation Details
-1. エリア選択（セレクト）
-2. 予算範囲（スライダー）
-3. 間取り選択（チェックボックス）
-4. 建物種別選択
-
-### Acceptance Criteria
-- [ ] フィルターが変更できる
-- [ ] 即座に反映される
-
----
-
-## Task 9: PropertyDetailコンポーネント
-
-### Description
-物件詳細表示コンポーネント
-
-### Files to Create/Modify
-- `src/components/features/properties/PropertyDetail.tsx` (create)
-- `src/components/features/properties/PropertyGallery.tsx` (create)
-- `src/components/features/properties/PropertyInfo.tsx` (create)
-
-### Implementation Details
-1. 画像ギャラリー（スライダー）
-2. 詳細情報表示
-3. 設備一覧
-4. アクセス情報
-5. アクションボタン（内見予約、問い合わせ）
-
-### Acceptance Criteria
-- [ ] 詳細が表示される
-- [ ] ギャラリーが動作する
+- 6.3 マイグレーションスクリプトを準備する
+  - テーブル作成SQLスクリプト
+  - インデックス作成スクリプト
+  - RLSポリシー設定スクリプト
+  - ロールバック手順
 
 ---
 
-## Task 10: 顧客向け物件ページ
+## タスク実行順序の推奨
 
-### Description
-顧客向けの物件一覧・詳細ページ
+### Phase 1: データベース基盤（並列可）
+- 1.1, 1.2 → 1.3
 
-### Files to Create/Modify
-- `app/(customer)/properties/page.tsx` (create)
-- `app/(customer)/properties/[id]/page.tsx` (create)
+### Phase 2: API実装（部分的に並列可）
+- 2.1, 2.2 → 2.3, 2.4, 2.5, 2.6
 
-### Implementation Details
-1. PropertyList + PropertyFilter配置
-2. 詳細ページレイアウト
-3. 認証ガード
+### Phase 3: フロントエンド実装
+- 3.1, 3.2 → 3.3 → 3.4 → 3.5 → 3.6
 
-### Acceptance Criteria
-- [ ] ページが表示される
-- [ ] 認証が必要
+### Phase 4: テスト・最適化（並列可）
+- 4.1, 4.2 → 4.3
+- 5.1, 5.2, 5.3
 
----
-
-## Task 11: オペレーター向け物件管理ページ
-
-### Description
-オペレーター向けの物件管理ダッシュボード
-
-### Files to Create/Modify
-- `app/(operator)/properties/page.tsx` (create)
-- `app/(operator)/properties/[id]/edit/page.tsx` (create)
-- `src/components/features/properties/PropertyTable.tsx` (create)
-- `src/components/features/properties/PropertyEditor.tsx` (create)
-
-### Implementation Details
-1. テーブル形式の一覧
-2. 編集フォーム
-3. 公開/非公開切り替え
-4. 削除機能
-
-### Acceptance Criteria
-- [ ] 一覧が表示される
-- [ ] 編集ができる
-- [ ] 削除ができる
-
----
-
-## Task 12: テスト実装
-
-### Description
-物件管理機能のテスト
-
-### Files to Create/Modify
-- `src/lib/services/__tests__/property-service.test.ts` (create)
-- `app/api/properties/__tests__/route.test.ts` (create)
-
-### Acceptance Criteria
-- [ ] サービスのテストがパスする
-- [ ] APIのテストがパスする
+### Phase 5: ドキュメント（並列可）
+- 6.1, 6.2, 6.3

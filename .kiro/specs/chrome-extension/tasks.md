@@ -1,208 +1,158 @@
 # Implementation Tasks
 
-## Task 1: 拡張機能プロジェクト構成
+- [ ] 1. Chrome拡張機能の基盤構築
+  - [ ] 1.1 (P) プロジェクト構造とビルド環境の構築
+    - Manifest V3形式のmanifest.jsonを作成
+    - Vite + React + TypeScriptのビルド設定
+    - 開発/本番ビルドスクリプトの実装
+    - _Requirements: 1.1, 1.2, 1.3, 2.1_
+  - [ ] 1.2 (P) Content Scriptによる物件ページ検出機能
+    - アットホーム・SUUMO等の対応サイト判定ロジック
+    - URLパターンマッチングによるサイト検出
+    - 拡張機能アイコンの状態切り替え（アクティブ/グレーアウト）
+    - _Requirements: 1.1, 1.2, 1.3_
+  - [ ] 1.3 (P) Background Service Workerのメッセージング基盤
+    - Chrome Storage APIによる認証状態管理
+    - Popup/Content Script間のメッセージングハンドラ
+    - 拡張機能ライフサイクル管理
+    - _Requirements: 5.3_
 
-### Description
-Chrome拡張機能のプロジェクト構造を作成
+- [ ] 2. 認証機能の実装
+  - [ ] 2.1 Supabase Auth連携とトークン管理
+    - Supabase Auth JWTの取得と保存
+    - Chrome Storage での認証状態永続化
+    - トークン更新ロジック
+    - 未認証時のログイン促進UI
+    - _Requirements: 5.1, 5.2, 5.3_
 
-### Files to Create/Modify
-- `extension/` ディレクトリ作成
-- `extension/manifest.json` (create)
-- `extension/package.json` (create)
-- `extension/vite.config.ts` (create)
-- `extension/tsconfig.json` (create)
+- [ ] 3. Popup UIの実装
+  - [ ] 3.1 (P) Reactベースのポップアップ画面
+    - ログインフォームコンポーネント（未認証時）
+    - 取り込みボタンと状態表示（認証済み時）
+    - ローディング/成功/エラーメッセージUI
+    - shadcn/uiを使ったデザイン統合
+    - _Requirements: 2.1, 2.4, 5.1_
+  - [ ] 3.2 (P) 重複物件の更新オプション表示
+    - 重複検出時の既存物件情報表示
+    - 更新/キャンセルの選択UI
+    - 更新確認ダイアログ
+    - _Requirements: 2.4_
 
-### Implementation Details
-1. Manifest V3形式
-2. Vite + React設定
-3. TypeScript設定
+- [ ] 4. 物件取り込み機能の実装
+  - [ ] 4.1 Content ScriptによるHTML抽出
+    - document.outerHTMLの取得
+    - URL情報の取得
+    - Background Workerへのメッセージ送信
+    - _Requirements: 2.2_
+  - [ ] 4.2 Background WorkerのAPI連携
+    - /api/properties/import へのPOSTリクエスト
+    - 認証トークンの付与
+    - エラーハンドリングとリトライロジック
+    - 重複エラー（409）の処理と更新フロー
+    - _Requirements: 2.3, 2.4_
 
-### Acceptance Criteria
-- [ ] プロジェクト構造が作成される
-- [ ] ビルドが通る
+- [ ] 5. バックエンドAPI実装
+  - [ ] 5.1 POST /api/properties/import エンドポイント
+    - JWT認証検証（operator/adminロール）
+    - HTMLサイズ制限（5MB）の検証
+    - source_urlによる重複チェック
+    - 重複時のエラーレスポンス（既存property_id含む）
+    - force_updateパラメータによる更新対応
+    - _Requirements: 2.3, 5.2_
+  - [ ] 5.2 GPT-4oによる構造化データ抽出
+    - Zodスキーマ定義（title, address, rent, layout等）
+    - generateObject APIによる物件情報抽出
+    - サイト別プロンプト最適化（アットホーム/SUUMO）
+    - 抽出失敗時のエラーハンドリング
+    - _Requirements: 3.1, 3.2_
+  - [ ] 5.3 OpenAI Embeddingsによるベクトル生成
+    - 物件情報テキストの結合（title + address + description等）
+    - text-embedding-3-small APIによるベクトル生成
+    - DB保存用の型変換
+    - _Requirements: 3.3_
+  - [ ] 5.4 データベース保存処理
+    - propertiesテーブルへのINSERT/UPDATE
+    - property_import_logsテーブルへの記録（ログ・担当者・日時）
+    - source_urlのユニーク制約対応
+    - トランザクション管理
+    - _Requirements: 4.2, 4.3_
+  - [ ] 5.5 HTMLスナップショットのStorage保存
+    - Supabase Storageへのアップロード
+    - Private bucketの設定
+    - ファイルパス生成（operator_id/property_id/timestamp.html）
+    - Storage URLのDB記録
+    - _Requirements: 4.1_
 
----
+- [ ] 6. データベーススキーマの拡張
+  - [ ] 6.1 (P) propertiesテーブルの拡張
+    - source_urlカラムの追加
+    - オペレーターごとのユニーク制約（idx_properties_source_url_operator）
+    - マイグレーションファイル作成
+    - _Requirements: 4.2_
+  - [ ] 6.2 (P) property_import_logsテーブルの作成
+    - テーブル定義（id, property_id, operator_id, source_url等）
+    - is_updateフラグの追加
+    - statusカラムの追加（success/failed/duplicate_updated）
+    - マイグレーションファイル作成
+    - _Requirements: 4.2, 4.3_
 
-## Task 2: Content Script実装
+- [ ] 7. 取り込み履歴機能の実装
+  - [ ] 7.1 取り込みログサービスの実装
+    - ログ一覧取得API（operator_idでフィルタ）
+    - HTMLスナップショットダウンロード機能
+    - ページネーション対応
+    - _Requirements: 4.3_
+  - [ ] 7.2 オペレーター向け履歴画面
+    - 取り込み履歴一覧ページ（/import/history）
+    - 取り込み日時・URL・ステータスの表示
+    - HTMLスナップショットの閲覧機能
+    - _Requirements: 4.3_
 
-### Description
-物件ページからHTMLを取得するContent Script
+- [ ] 8. エラーハンドリングと通知
+  - [ ] 8.1 (P) 拡張機能側のエラー処理
+    - 未認証エラー → ログインページへ誘導
+    - 非対応サイトエラー → メッセージ表示
+    - ネットワークエラー → リトライオプション表示
+    - 重複エラー → 更新オプション表示
+    - _Requirements: 2.4, 5.1_
+  - [ ] 8.2 (P) API側のエラー処理
+    - 認証エラー（401）→ 再認証要求
+    - 権限エラー（403）→ エラーメッセージ
+    - 重複エラー（409）→ 既存物件情報レスポンス
+    - GPT抽出失敗 → 詳細エラーログ
+    - _Requirements: 2.3, 3.1_
 
-### Files to Create/Modify
-- `extension/src/content/content.ts` (create)
-- `extension/src/content/site-detector.ts` (create)
+- [ ] 9. テストの実装
+  - [ ] 9.1 (P) Content Scriptのユニットテスト
+    - サイト判定ロジックのテスト
+    - HTML抽出機能のテスト
+    - _Requirements: 1.2, 2.2_
+  - [ ] 9.2 (P) GPT-4o抽出ロジックのテスト
+    - アットホームHTMLの抽出テスト
+    - SUUMOHTMLの抽出テスト
+    - スキーマ検証テスト
+    - _Requirements: 3.1, 3.2_
+  - [ ] 9.3 (P) API統合テスト
+    - 認証検証のテスト
+    - 重複チェックのテスト
+    - DB保存のテスト
+    - Storage保存のテスト
+    - _Requirements: 2.3, 4.1, 4.2_
+  - [ ] 9.4 E2Eテスト
+    - 実際の不動産サイトでの取り込みテスト
+    - Popup → Content Script → API の連携テスト
+    - 重複取り込みシナリオのテスト
+    - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-### Implementation Details
-1. 対応サイト判定（アットホーム、SUUMO等）
-2. document.outerHTML取得
-3. メッセージリスナー設定
-
-### Acceptance Criteria
-- [ ] サイト判定が機能する
-- [ ] HTMLが取得できる
-
----
-
-## Task 3: Background Service Worker実装
-
-### Description
-認証管理とAPI通信を行うService Worker
-
-### Files to Create/Modify
-- `extension/src/background/background.ts` (create)
-- `extension/src/background/auth.ts` (create)
-- `extension/src/background/api.ts` (create)
-
-### Implementation Details
-1. Chrome Storage での認証状態保持
-2. Supabase Auth連携
-3. /api/properties/import呼び出し
-4. メッセージハンドリング
-
-### Acceptance Criteria
-- [ ] 認証状態が保持される
-- [ ] API呼び出しが機能する
-
----
-
-## Task 4: Popup UI実装
-
-### Description
-取り込みボタンと状態表示のPopup
-
-### Files to Create/Modify
-- `extension/src/popup/Popup.tsx` (create)
-- `extension/src/popup/LoginForm.tsx` (create)
-- `extension/src/popup/ImportButton.tsx` (create)
-- `extension/src/popup/StatusMessage.tsx` (create)
-- `extension/popup.html` (create)
-
-### Implementation Details
-1. React + shadcn/ui
-2. 認証状態に応じた表示切り替え
-3. ローディング状態表示
-4. 成功/エラーメッセージ
-
-### Acceptance Criteria
-- [ ] ログインフォームが表示される
-- [ ] 取り込みボタンが機能する
-- [ ] 状態が正しく表示される
-
----
-
-## Task 5: POST /api/properties/import API実装
-
-### Description
-物件取り込みAPIエンドポイント
-
-### Files to Create/Modify
-- `app/api/properties/import/route.ts` (create)
-
-### Implementation Details
-1. 認証検証（operator/admin のみ）
-2. HTMLサイズ検証（5MB上限）
-3. GPT-4o generateObject呼び出し
-4. OpenAI Embeddings生成
-5. properties テーブル INSERT
-6. property_import_logs INSERT
-7. Supabase Storage にHTML保存
-
-### Acceptance Criteria
-- [ ] 認証が機能する
-- [ ] 構造化データが抽出される
-- [ ] DBに保存される
-- [ ] HTMLがStorageに保存される
-
----
-
-## Task 6: GPT-4o構造化抽出ロジック
-
-### Description
-HTMLから物件情報を抽出するAIロジック
-
-### Files to Create/Modify
-- `src/lib/ai/property-extractor.ts` (create)
-
-### Implementation Details
-1. Zodスキーマ定義
-2. generateObject設定
-3. サイト別プロンプト最適化
-
-### Acceptance Criteria
-- [ ] アットホームのHTMLから抽出できる
-- [ ] SUUMOのHTMLから抽出できる
-
----
-
-## Task 7: 取り込みログ管理
-
-### Description
-取り込み履歴の保存と表示
-
-### Files to Create/Modify
-- `src/lib/services/import-log-service.ts` (create)
-- `app/(operator)/import/history/page.tsx` (create)
-
-### Implementation Details
-1. 取り込みログ保存
-2. 履歴一覧表示
-3. HTMLスナップショットダウンロード
-
-### Acceptance Criteria
-- [ ] ログが保存される
-- [ ] 履歴が確認できる
-
----
-
-## Task 8: 拡張機能ビルド設定
-
-### Description
-本番用ビルドとパッケージング
-
-### Files to Create/Modify
-- `extension/scripts/build.ts` (create)
-- `extension/scripts/package.ts` (create)
-
-### Implementation Details
-1. Vite本番ビルド
-2. manifest.json処理
-3. ZIPパッケージ作成
-
-### Acceptance Criteria
-- [ ] 本番ビルドが生成される
-- [ ] Chromeに読み込める
-
----
-
-## Task 9: テスト実装
-
-### Description
-Chrome拡張機能のテスト
-
-### Files to Create/Modify
-- `extension/src/__tests__/site-detector.test.ts` (create)
-- `app/api/properties/import/__tests__/route.test.ts` (create)
-- `src/lib/ai/__tests__/property-extractor.test.ts` (create)
-
-### Acceptance Criteria
-- [ ] サイト判定のテストがパスする
-- [ ] APIのテストがパスする
-- [ ] 抽出ロジックのテストがパスする
-
----
-
-## Task 10: ドキュメント作成
-
-### Description
-Chrome拡張機能の使用方法ドキュメント
-
-### Files to Create/Modify
-- `extension/README.md` (create)
-
-### Implementation Details
-1. インストール方法
-2. 使用方法
-3. トラブルシューティング
-
-### Acceptance Criteria
-- [ ] READMEが作成される
+- [ ] 10. 本番デプロイ準備
+  - [ ] 10.1 拡張機能のビルドとパッケージング
+    - 本番ビルドスクリプト（minify, tree-shaking）
+    - manifest.jsonの環境変数差し替え
+    - ZIPパッケージ生成
+    - Chrome Web Storeへのアップロード手順書
+    - _Requirements: 1.1_
+  - [ ] 10.2 セキュリティ設定の確認
+    - Content Security Policy（CSP）設定
+    - Supabase Storage Private bucket設定
+    - 環境変数の管理（API URL, Supabase keys）
+    - _Requirements: 5.2_

@@ -1,324 +1,184 @@
 # Implementation Tasks
 
-## Task 1: キオスクセッション管理
-
-### Description
-キオスクセッションの状態管理（Zustand）
-
-### Files to Create/Modify
-- `src/lib/stores/kiosk-store.ts` (create)
-
-### Implementation Details
-1. セッション状態（welcome, conversation, contact, complete, goodbye）
-2. メッセージ履歴
-3. 選択物件・予約日時
-4. リセット機能
-5. タイムアウト管理
-
-### Acceptance Criteria
-- [ ] 状態遷移が正しく動作する
-- [ ] リセットで全状態がクリアされる
-
----
-
-## Task 2: POST /api/kiosk/chat API
-
-### Description
-キオスク専用の会話API（認証なし）
-
-### Files to Create/Modify
-- `app/api/kiosk/chat/route.ts` (create)
-- `src/lib/ai/kiosk-system-prompt.ts` (create)
-
-### Implementation Details
-1. operator_idによるデータ分離
-2. GPT-4o + Function Calling
-3. 物件検索ツール
-4. 内見予約ツール
-5. 感情分析
-6. SSEストリーミング
-
-### Acceptance Criteria
-- [ ] 認証なしでアクセス可能
-- [ ] 物件検索が機能する
-- [ ] 内見予約提案が機能する
-
----
-
-## Task 3: キオスク用AI System Prompt
-
-### Description
-不動産接客に特化したシステムプロンプト
-
-### Files to Create/Modify
-- `src/lib/ai/kiosk-system-prompt.ts` (create)
-
-### Implementation Details
-1. 丁寧な接客口調
-2. 高齢者向けの分かりやすい説明
-3. 条件ヒアリングの流れ
-4. 物件提案の仕方
-5. 内見予約への誘導
-
-### Acceptance Criteria
-- [ ] 自然な会話が生成される
-- [ ] 適切なタイミングで物件検索する
-
----
-
-## Task 4: AI Function Calling Tools
-
-### Description
-キオスク用のFunction Callingツール群
-
-### Files to Create/Modify
-- `src/lib/ai/tools/kiosk-tools.ts` (create)
-
-### Implementation Details
-1. searchProperties: 物件検索
-2. getPropertyDetail: 物件詳細
-3. proposeViewing: 内見提案
-4. confirmViewing: 内見確定
-
-### Acceptance Criteria
-- [ ] 各ツールが正しく動作する
-- [ ] 検索結果が適切に返る
-
----
-
-## Task 5: POST /api/kiosk/complete API
-
-### Description
-予約完了と顧客情報登録API
-
-### Files to Create/Modify
-- `app/api/kiosk/complete/route.ts` (create)
-
-### Implementation Details
-1. 顧客情報バリデーション
-2. customers INSERT
-3. viewings INSERT
-4. conversations UPDATE
-5. 顧客確認メール送信
-6. オペレーター通知メール送信
-
-### Acceptance Criteria
-- [ ] 顧客情報が保存される
-- [ ] 予約が保存される
-- [ ] メールが送信される
-
----
-
-## Task 6: KioskInterfaceコンポーネント
-
-### Description
-キオスク全体のコンテナコンポーネント
-
-### Files to Create/Modify
-- `src/components/features/kiosk/KioskInterface.tsx` (create)
-
-### Implementation Details
-1. フェーズに応じた表示切り替え
-2. Welcome → Conversation → Contact → Complete
-3. タイムアウト検知
-4. 自動リセット
-
-### Acceptance Criteria
-- [ ] フェーズ遷移が正しく動作する
-- [ ] タイムアウトでリセットする
-
----
-
-## Task 7: AvatarDisplayコンポーネント
-
-### Description
-感情表現付きアバター表示
-
-### Files to Create/Modify
-- `src/components/features/kiosk/AvatarDisplay.tsx` (create)
-- `public/avatars/` (5種類の表情画像)
-
-### Implementation Details
-1. 5種類の表情画像
-2. Framer Motionアニメーション
-3. 感情状態の購読
-
-### Acceptance Criteria
-- [ ] 表情が切り替わる
-- [ ] アニメーションが滑らか
-
----
-
-## Task 8: ConversationPanelコンポーネント
-
-### Description
-会話履歴と物件カード表示
-
-### Files to Create/Modify
-- `src/components/features/kiosk/ConversationPanel.tsx` (create)
-- `src/components/features/kiosk/MessageBubble.tsx` (create)
-- `src/components/features/kiosk/PropertyCard.tsx` (create)
-
-### Implementation Details
-1. メッセージバブル（user/assistant）
-2. 物件カードインライン表示
-3. 自動スクロール
-4. ローディング表示
-
-### Acceptance Criteria
-- [ ] メッセージが表示される
-- [ ] 物件カードが表示される
-
----
-
-## Task 9: VoiceInputコンポーネント
-
-### Description
-音声入力機能
-
-### Files to Create/Modify
-- `src/components/features/kiosk/VoiceInput.tsx` (create)
-- `src/components/features/kiosk/TextInput.tsx` (create)
-
-### Implementation Details
-1. マイクボタン
-2. 録音中の波形表示
-3. Whisper API呼び出し
-4. テキスト入力フォールバック
-
-### Acceptance Criteria
-- [ ] 音声録音ができる
-- [ ] テキスト変換される
-
----
-
-## Task 10: AudioPlayerコンポーネント
-
-### Description
-AI応答の音声読み上げ
-
-### Files to Create/Modify
-- `src/components/features/kiosk/AudioPlayer.tsx` (create)
-
-### Implementation Details
-1. ElevenLabs TTS呼び出し
-2. 自動再生
-3. キャッシュ利用
-
-### Acceptance Criteria
-- [ ] 応答が読み上げられる
-
----
-
-## Task 11: ContactFormコンポーネント
-
-### Description
-連絡先入力フォーム
-
-### Files to Create/Modify
-- `src/components/features/kiosk/ContactForm.tsx` (create)
-
-### Implementation Details
-1. 名前入力
-2. 電話番号入力（バリデーション）
-3. メールアドレス入力（バリデーション）
-4. 送信ボタン
-5. ローディング状態
-
-### Acceptance Criteria
-- [ ] 入力バリデーションが機能する
-- [ ] 送信でAPI呼び出し
-
----
-
-## Task 12: CompletionScreenコンポーネント
-
-### Description
-予約完了画面
-
-### Files to Create/Modify
-- `src/components/features/kiosk/CompletionScreen.tsx` (create)
-
-### Implementation Details
-1. 「ありがとうございました」メッセージ
-2. 予約内容サマリー
-3. 30秒後自動リセット
-4. 終了ボタン
-
-### Acceptance Criteria
-- [ ] 完了画面が表示される
-- [ ] 自動リセットする
-
----
-
-## Task 13: GoodbyeScreenコンポーネント
-
-### Description
-予約なし終了画面
-
-### Files to Create/Modify
-- `src/components/features/kiosk/GoodbyeScreen.tsx` (create)
-
-### Implementation Details
-1. 「またのご来店をお待ちしています」メッセージ
-2. 自動リセット
-
-### Acceptance Criteria
-- [ ] 終了画面が表示される
-- [ ] 自動リセットする
-
----
-
-## Task 14: キオスクページ
-
-### Description
-キオスク用のメインページ
-
-### Files to Create/Modify
-- `app/kiosk/[operatorId]/page.tsx` (create)
-- `app/kiosk/[operatorId]/layout.tsx` (create)
-
-### Implementation Details
-1. operatorIdをURLから取得
-2. KioskInterface配置
-3. フルスクリーンレイアウト
-4. キオスクモード用CSS
-
-### Acceptance Criteria
-- [ ] ページが表示される
-- [ ] operator_idが正しく取得される
-
----
-
-## Task 15: メールテンプレート
-
-### Description
-キオスク予約用のメールテンプレート
-
-### Files to Create/Modify
-- `src/lib/email/templates/KioskBookingConfirmation.tsx` (create)
-- `src/lib/email/templates/KioskBookingNotification.tsx` (create)
-
-### Implementation Details
-1. 顧客向け確認メール
-2. オペレーター向け通知メール
-3. 予約詳細表示
-
-### Acceptance Criteria
-- [ ] メールが正しくレンダリングされる
-
----
-
-## Task 16: テスト実装
-
-### Description
-キオスク機能のテスト
-
-### Files to Create/Modify
-- `src/lib/stores/__tests__/kiosk-store.test.ts` (create)
-- `app/api/kiosk/__tests__/chat.test.ts` (create)
-- `app/api/kiosk/__tests__/complete.test.ts` (create)
-
-### Acceptance Criteria
-- [ ] ストアのテストがパスする
-- [ ] APIのテストがパスする
+## 1. データモデルとデータベースセットアップ
+
+- [ ] 1.1 (P) Supabaseテーブル設計と作成
+  - `conversations`テーブル（session_type、operator_id、customer_id、outcome等）
+  - `messages`テーブル（conversation_id、role、content等）
+  - `customers`テーブル（name、phone、email等）
+  - `viewings`テーブル（customer_id、property_id、viewing_date等）
+  - Service Roleを使用した認証なしアクセス設定
+  - _Requirements: 4.6, 5.4, 7.3_
+
+## 2. バックエンドAPI実装
+
+- [ ] 2.1 (P) キオスクチャットAPI実装（`/api/kiosk/chat`）
+  - SSEストリーム対応（text、emotion、criteria_update、properties_add等）
+  - Gemini 2.5 Flash統合（Vercel AI SDK）
+  - session_idとoperator_idのハンドリング
+  - レート制限の実装（IP + session_id）
+  - _Requirements: 1.1, 1.2, 1.4_
+
+- [ ] 2.2 (P) AI Function Calling実装
+  - `addPropertyCriteria`: 条件追加と物件スロット追加
+  - `refineCriteria`: 条件変更とスロット内物件絞り込み
+  - `selectProperty`: 物件選択と詳細表示
+  - `proposeViewing`: 内見予約提案
+  - `confirmViewing`: 内見予約確定
+  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2_
+
+- [ ] 2.3 音声処理API実装（`/api/voice/`）
+  - `/api/voice/transcribe`: OpenAI Whisperで音声→テキスト変換
+  - `/api/voice/synthesize`: Google Cloud TTSでテキスト→音声変換
+  - ストリーミングTTS対応（文単位チャンク分割）
+  - 音声キャッシュ機能（頻出フレーズの事前キャッシュ）
+  - _Requirements: 1.2, 1.3_
+
+- [ ] 2.4 予約完了API実装（`/api/kiosk/complete`）
+  - 顧客情報バリデーション（電話番号形式、メール形式）
+  - customersテーブルへのINSERT
+  - viewingsテーブルへのINSERT
+  - conversationsテーブルのUPDATE
+  - Resendを使った確認メール送信（顧客向け）
+  - Resendを使った通知メール送信（オペレーター向け）
+  - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
+
+## 3. フロントエンド状態管理とコアロジック
+
+- [ ] 3.1 Zustandストア実装
+  - KioskState（phase、sessionId、messages、propertySlots、selectedProperty等）
+  - collectedCriteria（段階的に収集される条件）
+  - セッション操作（reset、updatePhase等）
+  - _Requirements: 1.5, 5.3, 5.4_
+
+- [ ] 3.2 セッションタイムアウトとリセット機能
+  - 10分操作なしで自動リセット
+  - 完了画面30秒後自動リセット
+  - リセット時の会話履歴と入力情報クリア
+  - _Requirements: 1.5, 5.3, 5.4_
+
+## 4. UIコンポーネント実装（会話インターフェース）
+
+- [ ] 4.1 (P) KioskInterfaceコンポーネント
+  - phase切り替え（welcome、conversation、contact、complete、goodbye）
+  - レイアウト構成（アバター、メッセージリスト、入力エリア）
+  - _Requirements: 1.1, 5.1, 5.2, 7.1, 7.2_
+
+- [ ] 4.2 (P) AvatarDisplayコンポーネント
+  - 5種類の表情（neutral、happy、thinking、apologetic、excited）
+  - AI応答内容に応じた自動表情選択
+  - 表情切り替えアニメーション
+  - _Requirements: 6.1, 6.2, 6.3_
+
+- [ ] 4.3 ConversationPanelコンポーネント
+  - メッセージ履歴表示（user/assistant）
+  - ストリーミングメッセージ表示
+  - テキスト先行表示（音声は後から再生）
+  - 音声再生状態の表示（preparing、playing、done、skipped）
+  - スキップボタン（音声再生中のみ表示）
+  - _Requirements: 1.3, 1.4_
+
+- [ ] 4.4 PropertySlotsコンポーネント
+  - 候補物件のカルーセル表示（横スクロール）
+  - 物件追加/絞り込みアニメーション
+  - 物件選択時のハイライト
+  - 物件カード表示
+  - _Requirements: 2.2, 2.3_
+
+- [ ] 4.5 VoiceInputコンポーネント
+  - 大きな音声ボタン（画面中央配置）
+  - 録音開始/停止
+  - `/api/voice/transcribe`への音声送信
+  - テキスト入力との併用UI
+  - 「終了」ボタン
+  - _Requirements: 1.2, 7.1_
+
+## 5. UIコンポーネント実装（フォームと完了画面）
+
+- [ ] 5.1 ContactFormコンポーネント
+  - 入力フィールド（name、phone、email）
+  - リアルタイムバリデーション
+  - エラー表示（フィールドハイライト）
+  - `/api/kiosk/complete`への送信
+  - リトライボタン（送信失敗時）
+  - _Requirements: 4.1, 4.2, 4.3_
+
+- [ ] 5.2 CompletionScreenコンポーネント
+  - 予約内容サマリー表示
+  - 「ありがとうございました」メッセージ
+  - 30秒後自動リセットカウントダウン
+  - 「終了」ボタン（即座にリセット）
+  - _Requirements: 5.1, 5.2, 5.3_
+
+- [ ] 5.3 GoodbyeScreenコンポーネント
+  - 「またのご来店をお待ちしています」メッセージ
+  - 会話ログDB保存（outcome: browsing_only）
+  - 自動リセットタイマー
+  - _Requirements: 7.2, 7.3_
+
+## 6. 会話フロー統合
+
+- [ ] 6.1 会話フロー全体統合
+  - Welcome → Conversation → ContactForm → Complete → Welcome
+  - 物件検索フロー（条件ヒアリング → 検索 → 提案 → 選択）
+  - 内見予約フロー（日時確認 → 確認 → 連絡先入力）
+  - 条件緩和提案（物件0件時）
+  - _Requirements: 1.1, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3_
+
+- [ ] 6.2 エラーハンドリング実装
+  - Gemini APIエラー時の再試行促進メッセージ
+  - 物件検索0件時の条件緩和提案
+  - フォーム送信失敗時のリトライ
+  - タイムアウト処理
+  - _Requirements: 2.5_
+
+## 7. テストとパフォーマンス最適化
+
+- [ ] 7.1 (P) ユニットテスト実装
+  - ContactFormバリデーションテスト
+  - AI Toolsパラメータ検証テスト
+  - Zustandストアテスト
+  - _Requirements: 4.3_
+
+- [ ] 7.2 統合テスト実装
+  - 会話フロー全体テスト
+  - 予約完了フローテスト
+  - エラーハンドリングテスト
+  - _Requirements: 1.1, 2.1, 3.1, 4.1_
+
+- [ ] 7.3 E2Eテスト実装
+  - 初期画面 → 物件検索 → 内見予約 → 連絡先入力 → 完了 → リセット
+  - 予約なし終了フロー
+  - タイムアウトリセット
+  - _Requirements: 1.5, 5.3, 7.1_
+
+- [ ] 7.4 パフォーマンス最適化
+  - ストリーミングTTS実装と検証
+  - 音声キャッシュ実装（キャッシュヒット率40%以上）
+  - テキスト先行表示の動作確認
+  - スキップ機能の動作確認
+  - セッションタイムアウト動作確認
+  - _Requirements: 1.3_
+
+## 8. デプロイと運用準備
+
+- [ ] 8.1 環境変数設定
+  - Gemini API Key
+  - OpenAI API Key
+  - Google Cloud TTS設定
+  - Supabase Service Role Key
+  - Resend API Key
+  - operator_id設定
+  - _Requirements: 1.1, 4.4, 4.5_
+
+- [ ] 8.2 (P) 本番環境デプロイ
+  - Vercelデプロイ設定
+  - レート制限設定
+  - エラーログ監視設定
+  - _Requirements: 1.5_
+
+- [ ] 8.3 ドキュメント作成
+  - 運用マニュアル（店舗設置手順）
+  - トラブルシューティングガイド
+  - オペレーター向け使い方ガイド
+  - _Requirements: 1.1_
