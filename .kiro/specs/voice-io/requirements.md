@@ -27,11 +27,11 @@
 **Objective:** As a kiosk user, I want to hear the AI's response, so that I can have a natural conversation
 
 #### Acceptance Criteria
-1. When AIが応答完了, システムはElevenLabs APIで音声を生成する
+1. When AIが応答完了, システムはGoogle Cloud TTS APIで音声を生成する
 2. When 音声生成完了, システムは自動再生する
 3. システムは日本語の自然な音声を生成する
 4. When 同じテキストを再度読み上げる場合, システムはキャッシュから音声を取得する
-5. システムは読み上げ中にアバターの口をアニメーションする
+5. システムは読み上げ中にアバターの感情を切り替える（静止画方式）
 
 ### Requirement 3: 音声キャッシング
 **Objective:** As a system, I want to cache audio files, so that I can reduce API costs and latency

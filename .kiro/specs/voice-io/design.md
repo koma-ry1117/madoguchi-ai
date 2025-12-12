@@ -81,35 +81,74 @@ sequenceDiagram
     Kiosk->>Kiosk: AI会話APIに送信
 ```
 
-### 音声出力フロー（自動再生）
+### 音声出力フロー（ストリーミングTTS）
+
+**設計方針**: テキストを先行表示し、音声はバックグラウンドで準備。ユーザーは待ち時間中にテキストを読める。
 
 ```mermaid
 sequenceDiagram
+    participant AI as Gemini (Stream)
     participant Kiosk as KioskInterface
     participant AP as AudioPlayer
     participant API as /api/voice/synthesize
     participant Cache as Supabase Storage
     participant GC as Google Cloud TTS
 
-    Kiosk->>AP: AIメッセージ受信
-    AP->>API: POST { text }
-    API->>API: SHA256(text) → hash
-    API->>Cache: download(hash.mp3)
+    AI-->>Kiosk: テキストストリーム開始
+    Kiosk->>Kiosk: テキスト即座に表示開始
 
-    alt Cache Hit
-        Cache-->>API: audio data
-    else Cache Miss
-        API->>GC: synthesizeSpeech()
-        GC-->>API: audio stream
-        API->>Cache: upload(hash.mp3)
+    Note over Kiosk: 文単位でチャンク分割
+
+    loop 各チャンク（文単位）
+        Kiosk->>AP: チャンク送信
+        AP->>API: POST { text: chunk }
+        API->>API: SHA256(chunk) → hash
+        API->>Cache: download(hash.mp3)
+
+        alt Cache Hit
+            Cache-->>API: audio data
+        else Cache Miss
+            API->>GC: synthesizeSpeech()
+            GC-->>API: audio stream
+            API->>Cache: upload(hash.mp3)
+        end
+
+        API-->>AP: audio/mpeg
+        AP->>AP: AudioQueueに追加
     end
 
-    API-->>AP: audio/mpeg
-    AP->>AP: Audio.play()
+    Note over AP: 最初のチャンク準備完了で再生開始
+    AP->>AP: AudioQueue順次再生
     AP-->>Kiosk: onPlayStart()
-    Note over Kiosk: アバターアニメーション開始
+    Note over Kiosk: アバター感情切り替え
     AP-->>Kiosk: onPlayEnd()
-    Note over Kiosk: アバターアニメーション終了
+```
+
+### チャンク分割ロジック
+
+```typescript
+// 日本語の文末で分割（。！？で区切る）
+const splitIntoChunks = (text: string): string[] => {
+  const chunks = text.split(/(?<=[。！？])/);
+  return chunks.filter(chunk => chunk.trim().length > 0);
+};
+
+// 例: "こちらの物件は駅から徒歩5分です。おすすめですよ。"
+// → ["こちらの物件は駅から徒歩5分です。", "おすすめですよ。"]
+```
+
+### 音声再生キュー
+
+```typescript
+interface AudioQueue {
+  chunks: AudioBuffer[];
+  currentIndex: number;
+  isPlaying: boolean;
+
+  enqueue(audio: AudioBuffer): void;
+  play(): void;
+  skip(): void;  // 読み上げスキップ
+}
 ```
 
 ## Components and Interfaces
@@ -172,19 +211,35 @@ interface VoiceInputProps {
 #### AudioPlayer（キオスク専用）
 | Field | Detail |
 |-------|--------|
-| Intent | 音声再生とアバター連携 |
+| Intent | ストリーミング音声再生とアバター連携 |
 | Requirements | 2, 4 |
 
 **Props**
 ```typescript
 interface AudioPlayerProps {
-  text: string;
-  autoPlay: boolean; // キオスクでは常にtrue
+  chunks: string[];           // 文単位のチャンク配列
+  autoPlay: boolean;          // キオスクでは常にtrue
   onPlayStart?: () => void;
   onPlayEnd?: () => void;
-  onInterrupt?: () => void; // ユーザーが話し始めた時
+  onInterrupt?: () => void;   // ユーザーが話し始めた時
+  onSkip?: () => void;        // スキップボタン押下時
 }
 ```
+
+**State**
+```typescript
+interface AudioPlayerState {
+  queue: AudioBuffer[];
+  currentIndex: number;
+  isPlaying: boolean;
+  isSkipped: boolean;
+}
+```
+
+**スキップ機能**
+- ユーザーが読み上げ中に「スキップ」ボタンを押すと即座に停止
+- 残りのチャンクのTTSリクエストもキャンセル
+- テキストは表示済みなので情報は失われない
 
 #### VoiceWaveform
 | Field | Detail |
@@ -259,15 +314,43 @@ audio-cache/{operator_id}/{sha256_hash}.mp3
 - Lifecycle: 30日後自動削除
 
 ### Pre-cached Phrases（事前キャッシュ）
+
+**目的**: キャッシュヒット率を高め、TTS待ち時間を削減
+
 ```typescript
 const PRECACHED_PHRASES = [
-  "いらっしゃいませ。何かお探しでしょうか？",
+  // 挨拶・基本応答
+  "いらっしゃいませ。",
+  "何かお探しでしょうか？",
   "かしこまりました。",
-  "少々お待ちください。",
   "ありがとうございます。",
   "またのご来店をお待ちしております。",
+
+  // 確認パターン
+  "ご予算はいくらくらいをお考えですか？",
+  "間取りのご希望はありますか？",
+  "エリアのご希望はありますか？",
+  "駅からの距離はどのくらいがよろしいですか？",
+  "その他にご希望の条件はありますか？",
+
+  // 提案パターン
+  "こちらの物件はいかがでしょうか。",
+  "おすすめの物件がございます。",
+  "条件に合う物件が見つかりました。",
+
+  // 内見予約
+  "内見のご予約を承ります。",
+  "ご都合の良い日時をお聞かせください。",
+  "ご連絡先をお教えください。",
+  "ご予約ありがとうございます。",
+  "担当者よりご連絡いたします。",
 ];
 ```
+
+**キャッシュ戦略**
+- 起動時に事前キャッシュフレーズを非同期でTTS生成・保存
+- 文単位のチャンクがキャッシュフレーズと完全一致すればキャッシュヒット
+- キャッシュヒット率をモニタリングし、頻出フレーズを随時追加
 
 ## Error Handling
 
@@ -299,8 +382,22 @@ const PRECACHED_PHRASES = [
 
 ## Performance Considerations
 
+### 基本設定
 - 音声ファイルサイズ: 最大5MB
-- キャッシュヒット率の監視
-- Google Cloud TTS レート制限: operator_idごとにレート制限
 - 録音最大時間: 60秒
+- Google Cloud TTS レート制限: operator_idごとにレート制限
+
+### ストリーミングTTS最適化
+- **テキスト先行表示**: 音声準備完了を待たずにテキストを即座に表示
+- **チャンク分割**: 文単位で分割し、最初のチャンク準備完了で再生開始
+- **並列リクエスト**: 複数チャンクのTTSを並列で生成
+- **体感待ち時間**: 全文一括より50%以上削減を目標
+
+### キャッシュ最適化
+- キャッシュヒット率の監視（目標: 40%以上）
 - 事前キャッシュ: よく使うフレーズを起動時にキャッシュ
+- 文単位キャッシュ: 同じ文は再利用される確率が高い
+
+### UX設計
+- スキップボタン: ユーザーが読み上げをスキップ可能
+- 音声なしフォールバック: TTS失敗時はテキストのみ表示（情報は失われない）
