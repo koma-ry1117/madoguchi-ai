@@ -1,5 +1,5 @@
 ---
-description: Show specification status and progress
+description: 仕様のステータスと進捗を表示
 allowed-tools: Bash, Read, Glob, Write, Edit, MultiEdit, Update
 argument-hint: <feature-name>
 ---

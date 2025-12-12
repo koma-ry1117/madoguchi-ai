@@ -1,5 +1,5 @@
 ---
-description: Validate implementation against requirements, design, and tasks
+description: 要件・設計・タスクに対する実装を検証
 allowed-tools: Bash, Glob, Grep, Read, LS
 argument-hint: [feature-name] [task-numbers]
 ---

@@ -1,5 +1,5 @@
 ---
-description: Create comprehensive technical design for a specification
+description: 仕様に基づく包括的な技術設計を作成
 allowed-tools: Bash, Glob, Grep, LS, Read, Write, Edit, MultiEdit, Update, WebSearch, WebFetch
 argument-hint: <feature-name> [-y]
 ---

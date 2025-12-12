@@ -1,5 +1,5 @@
 ---
-description: Create custom steering documents for specialized project contexts
+description: 専門領域向けのカスタムステアリングを作成
 allowed-tools: Bash, Read, Write, Edit, MultiEdit, Glob, Grep, LS
 ---
 

@@ -1,5 +1,5 @@
 ---
-description: Execute spec tasks using TDD methodology
+description: TDD手法で仕様タスクを実行
 allowed-tools: Bash, Read, Write, Edit, MultiEdit, Grep, Glob, LS, WebFetch, WebSearch
 argument-hint: <feature-name> [task-numbers]
 ---

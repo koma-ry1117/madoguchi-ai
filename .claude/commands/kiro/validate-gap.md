@@ -1,5 +1,5 @@
 ---
-description: Analyze implementation gap between requirements and existing codebase
+description: 要件と既存コードベース間の実装ギャップを分析
 allowed-tools: Bash, Glob, Grep, Read, Write, Edit, MultiEdit, WebSearch, WebFetch
 argument-hint: <feature-name>
 ---

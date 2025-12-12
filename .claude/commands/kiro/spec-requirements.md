@@ -1,5 +1,5 @@
 ---
-description: Generate comprehensive requirements for a specification
+description: 仕様の包括的な要件を生成
 allowed-tools: Bash, Glob, Grep, LS, Read, Write, Edit, MultiEdit, Update, WebSearch, WebFetch
 argument-hint: <feature-name>
 ---

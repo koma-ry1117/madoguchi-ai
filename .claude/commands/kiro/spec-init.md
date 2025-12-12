@@ -1,5 +1,5 @@
 ---
-description: Initialize a new specification with detailed project description
+description: プロジェクト説明から新しい仕様を初期化
 allowed-tools: Bash, Read, Write, Glob
 argument-hint: <project-description>
 ---

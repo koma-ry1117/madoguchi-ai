@@ -1,5 +1,5 @@
 ---
-description: Interactive technical design quality review and validation
+description: 対話式の技術設計レビューと検証
 allowed-tools: Read, Glob, Grep
 argument-hint: <feature-name>
 ---

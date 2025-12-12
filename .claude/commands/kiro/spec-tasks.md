@@ -1,5 +1,5 @@
 ---
-description: Generate implementation tasks for a specification
+description: 仕様の実装タスクを生成
 allowed-tools: Read, Write, Edit, MultiEdit, Glob, Grep
 argument-hint: <feature-name> [-y] [--sequential]
 ---
