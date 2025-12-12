@@ -1,0 +1,175 @@
+description: モダンなフルスタック構成。Next.js 15 App Routerによるサーバーレスアーキテクチャ。
+
+architecture: |
+  フロントエンド (Next.js 15 + React 19)
+           ↕
+     認証・認可層 (Supabase Auth + RLS)
+           ↕
+  AI・音声処理層 (Google Gemini + OpenAI Whisper + Google Cloud TTS)
+           ↕
+    データベース層 (Supabase PostgreSQL)
+           ↕
+     メール配信層 (Resend + React Email)
+
+core_technologies:
+  - category: Language
+    tech: TypeScript
+    version: "5.x"
+    note: strict mode
+  - category: Framework
+    tech: Next.js
+    version: "15"
+    note: App Router
+  - category: Runtime
+    tech: Node.js
+    version: "22+"
+  - category: UI
+    tech: React
+    version: "19"
+  - category: Styling
+    tech: Tailwind CSS
+    version: "4.x"
+  - category: UI Components
+    tech: shadcn/ui
+  - category: Animation
+    tech: Framer Motion
+
+key_libraries:
+  ai_voice:
+    - lib: ai (Vercel AI SDK)
+      use: AI統合、ストリーミング、Function Calling
+    - lib: "@ai-sdk/google"
+      use: Gemini 2.5連携
+    - lib: openai
+      use: Whisper（音声認識）
+    - lib: "@google-cloud/text-to-speech"
+      use: Google Cloud TTS（音声合成、WaveNet）
+  data_auth:
+    - lib: "@supabase/supabase-js"
+      use: DB、認証、Storage、Realtime
+    - lib: "@supabase/ssr"
+      use: Next.js 15対応SSRヘルパー（auth-helpers-nextjsは非推奨）
+  state_management:
+    - lib: zustand
+      use: Client State（UI状態）
+    - lib: "@tanstack/react-query"
+      use: Server State（データ同期）
+  validation:
+    - lib: zod
+      use: スキーマバリデーション、型推論
+    - lib: react-hook-form
+      use: フォーム管理
+  email:
+    - lib: resend
+      use: メール配信API
+    - lib: "@react-email/components"
+      use: HTMLメールテンプレート
+    - lib: ical-generator
+      use: カレンダー招待(.ics)生成
+
+state_management:
+  philosophy:
+    server_state:
+      tool: TanStack Query
+      use: Supabaseデータ、API応答（非同期、共有、stale可能）
+    client_state:
+      tool: Zustand
+      use: UI状態（モーダル開閉、フォーム入力中、テーマ）
+  principles:
+    - Supabaseから取得したデータをZustandにコピーしない
+    - Server Stateの鮮度管理はTanStack Queryに任せる
+    - Zustandは純粋なクライアント状態のみ
+  tanstack_query_pattern: |
+    // Server Component
+    import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
+
+    export default async function Page() {
+      const queryClient = new QueryClient();
+      await queryClient.prefetchQuery({
+        queryKey: ['properties'],
+        queryFn: fetchProperties,
+      });
+
+      return (
+        <HydrationBoundary state={dehydrate(queryClient)}>
+          <PropertyList />
+        </HydrationBoundary>
+      );
+    }
+  zustand_hydration_pattern: |
+    import { create } from 'zustand';
+    import { persist } from 'zustand/middleware';
+
+    const useThemeStore = create(
+      persist(
+        (set) => ({
+          theme: 'light',
+          setTheme: (theme) => set({ theme }),
+        }),
+        {
+          name: 'theme-storage',
+          skipHydration: true, // SSR時のハイドレーションをスキップ
+        }
+      )
+    );
+
+    // Client Componentでマウント後に復元
+    useEffect(() => {
+      useThemeStore.persist.rehydrate();
+    }, []);
+
+runtime_selection:
+  nodejs:
+    - AI API (/api/chat) - Google AI SDKの互換性
+    - メール送信 - React Email レンダリング
+  edge:
+    - 認証Middleware - 軽量処理
+    - 静的ページ - 低レイテンシ
+  example: |
+    export const runtime = 'nodejs';
+    export const maxDuration = 60;
+
+type_safety_pipeline:
+  - step: DBスキーマ → TypeScript型
+    command: supabase gen types typescript --local > src/types/database.types.ts
+  - step: TypeScript型 → Zodスキーマ
+    note: 自動生成または手動同期
+  - step: Zodスキーマ → ランタイムバリデーション
+    note: Server ActionでsafeParse使用
+
+development_standards:
+  type_safety:
+    - TypeScript strict mode必須
+    - any禁止、unknownで明示的に型ガード
+    - Zodでランタイムバリデーション
+    - DB型は自動生成、手動編集禁止
+  code_quality:
+    - ESLint + Prettier
+    - Husky + lint-staged（pre-commit）
+  testing:
+    - tool: Vitest
+      use: ユニットテスト
+    - tool: Playwright
+      use: E2Eテスト
+    - tool: MSW
+      use: APIモック
+
+key_decisions:
+  - decision: Next.js 15 App Router
+    reason: RSC・ストリーミング対応、部分レンダリング（PPR）準備
+  - decision: Supabase
+    reason: PostgreSQL + Auth + Storage + Realtime統合、RLSによるセキュリティ
+  - decision: "@supabase/ssr"
+    reason: Next.js 15非同期API対応、auth-helpersの後継
+  - decision: Google Gemini 2.5
+    reason: コスト効率の良いAI会話（Flash）、高精度タスク（Pro）
+  - decision: Google Cloud TTS
+    reason: 高品質な日本語音声合成（WaveNet）
+  - decision: Vercel AI SDK
+    reason: Next.jsとの統合、ストリーミング、Function Calling
+  - decision: TanStack Query
+    reason: Server Stateのキャッシュ・同期・リフレッシュ管理
+  - decision: Zustand
+    reason: Client State専用、軽量、TypeScript完全対応
+  - decision: Resend
+    reason: Next.js/React Email統合、Webhook対応

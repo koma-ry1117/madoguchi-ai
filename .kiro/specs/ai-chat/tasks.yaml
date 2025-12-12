@@ -1,0 +1,257 @@
+feature: ai-chat
+title: AIチャット（キオスク）実装タスク
+
+tasks:
+  - id: "1"
+    title: データモデルとデータベースセットアップ
+    subtasks:
+      - id: "1.1"
+        priority: true
+        title: Supabaseテーブル設計と作成
+        details:
+          - conversationsテーブル（session_type、operator_id、customer_id、outcome等）
+          - messagesテーブル（conversation_id、role、content等）
+          - customersテーブル（name、phone、email等）
+          - viewingsテーブル（customer_id、property_id、viewing_date等）
+          - Service Roleを使用した認証なしアクセス設定
+        requirements: [4.6, 5.4, 7.3]
+        status: pending
+
+  - id: "2"
+    title: バックエンドAPI実装
+    subtasks:
+      - id: "2.1"
+        priority: true
+        title: キオスクチャットAPI実装（/api/kiosk/chat）
+        details:
+          - SSEストリーム対応（text、emotion、criteria_update、properties_add等）
+          - Gemini 2.5 Flash統合（Vercel AI SDK）
+          - session_idとoperator_idのハンドリング
+          - レート制限の実装（IP + session_id）
+        requirements: [1.1, 1.2, 1.4]
+        status: pending
+      - id: "2.2"
+        priority: true
+        title: AI Function Calling実装
+        details:
+          - "addPropertyCriteria: 条件追加と物件スロット追加"
+          - "refineCriteria: 条件変更とスロット内物件絞り込み"
+          - "selectProperty: 物件選択と詳細表示"
+          - "proposeViewing: 内見予約提案"
+          - "confirmViewing: 内見予約確定"
+        requirements: [2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2]
+        status: pending
+      - id: "2.3"
+        title: 音声処理API実装（/api/voice/）
+        details:
+          - "/api/voice/transcribe: OpenAI Whisperで音声→テキスト変換"
+          - "/api/voice/synthesize: Google Cloud TTSでテキスト→音声変換"
+          - ストリーミングTTS対応（文単位チャンク分割）
+          - 音声キャッシュ機能（頻出フレーズの事前キャッシュ）
+        requirements: [1.2, 1.3]
+        status: pending
+      - id: "2.4"
+        title: 予約完了API実装（/api/kiosk/complete）
+        details:
+          - 顧客情報バリデーション（電話番号形式、メール形式）
+          - customersテーブルへのINSERT
+          - viewingsテーブルへのINSERT
+          - conversationsテーブルのUPDATE
+          - Resendを使った確認メール送信（顧客向け）
+          - Resendを使った通知メール送信（オペレーター向け）
+        requirements: [4.1, 4.2, 4.3, 4.4, 4.5, 4.6]
+        status: pending
+
+  - id: "3"
+    title: フロントエンド状態管理とコアロジック
+    subtasks:
+      - id: "3.1"
+        title: Zustandストア実装
+        details:
+          - KioskState（phase、sessionId、messages、propertySlots、selectedProperty等）
+          - collectedCriteria（段階的に収集される条件）
+          - セッション操作（reset、updatePhase等）
+        requirements: [1.5, 5.3, 5.4]
+        status: pending
+      - id: "3.2"
+        title: セッションタイムアウトとリセット機能
+        details:
+          - 10分操作なしで自動リセット
+          - 完了画面30秒後自動リセット
+          - リセット時の会話履歴と入力情報クリア
+        requirements: [1.5, 5.3, 5.4]
+        status: pending
+
+  - id: "4"
+    title: UIコンポーネント実装（会話インターフェース）
+    subtasks:
+      - id: "4.1"
+        priority: true
+        title: KioskInterfaceコンポーネント
+        details:
+          - phase切り替え（welcome、conversation、contact、complete、goodbye）
+          - レイアウト構成（アバター、メッセージリスト、入力エリア）
+        requirements: [1.1, 5.1, 5.2, 7.1, 7.2]
+        status: pending
+      - id: "4.2"
+        priority: true
+        title: AvatarDisplayコンポーネント
+        details:
+          - 5種類の表情（neutral、happy、thinking、apologetic、excited）
+          - AI応答内容に応じた自動表情選択
+          - 表情切り替えアニメーション
+        requirements: [6.1, 6.2, 6.3]
+        status: pending
+      - id: "4.3"
+        title: ConversationPanelコンポーネント
+        details:
+          - メッセージ履歴表示（user/assistant）
+          - ストリーミングメッセージ表示
+          - テキスト先行表示（音声は後から再生）
+          - 音声再生状態の表示（preparing、playing、done、skipped）
+          - スキップボタン（音声再生中のみ表示）
+        requirements: [1.3, 1.4]
+        status: pending
+      - id: "4.4"
+        title: PropertySlotsコンポーネント
+        details:
+          - 候補物件のカルーセル表示（横スクロール）
+          - 物件追加/絞り込みアニメーション
+          - 物件選択時のハイライト
+          - 物件カード表示
+        requirements: [2.2, 2.3]
+        status: pending
+      - id: "4.5"
+        title: VoiceInputコンポーネント
+        details:
+          - 大きな音声ボタン（画面中央配置）
+          - 録音開始/停止
+          - /api/voice/transcribeへの音声送信
+          - テキスト入力との併用UI
+          - 「終了」ボタン
+        requirements: [1.2, 7.1]
+        status: pending
+
+  - id: "5"
+    title: UIコンポーネント実装（フォームと完了画面）
+    subtasks:
+      - id: "5.1"
+        title: ContactFormコンポーネント
+        details:
+          - 入力フィールド（name、phone、email）
+          - リアルタイムバリデーション
+          - エラー表示（フィールドハイライト）
+          - /api/kiosk/completeへの送信
+          - リトライボタン（送信失敗時）
+        requirements: [4.1, 4.2, 4.3]
+        status: pending
+      - id: "5.2"
+        title: CompletionScreenコンポーネント
+        details:
+          - 予約内容サマリー表示
+          - 「ありがとうございました」メッセージ
+          - 30秒後自動リセットカウントダウン
+          - 「終了」ボタン（即座にリセット）
+        requirements: [5.1, 5.2, 5.3]
+        status: pending
+      - id: "5.3"
+        title: GoodbyeScreenコンポーネント
+        details:
+          - 「またのご来店をお待ちしています」メッセージ
+          - "会話ログDB保存（outcome: browsing_only）"
+          - 自動リセットタイマー
+        requirements: [7.2, 7.3]
+        status: pending
+
+  - id: "6"
+    title: 会話フロー統合
+    subtasks:
+      - id: "6.1"
+        title: 会話フロー全体統合
+        details:
+          - Welcome → Conversation → ContactForm → Complete → Welcome
+          - 物件検索フロー（条件ヒアリング → 検索 → 提案 → 選択）
+          - 内見予約フロー（日時確認 → 確認 → 連絡先入力）
+          - 条件緩和提案（物件0件時）
+        requirements: [1.1, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3]
+        status: pending
+      - id: "6.2"
+        title: エラーハンドリング実装
+        details:
+          - Gemini APIエラー時の再試行促進メッセージ
+          - 物件検索0件時の条件緩和提案
+          - フォーム送信失敗時のリトライ
+          - タイムアウト処理
+        requirements: [2.5]
+        status: pending
+
+  - id: "7"
+    title: テストとパフォーマンス最適化
+    subtasks:
+      - id: "7.1"
+        priority: true
+        title: ユニットテスト実装
+        details:
+          - ContactFormバリデーションテスト
+          - AI Toolsパラメータ検証テスト
+          - Zustandストアテスト
+        requirements: [4.3]
+        status: pending
+      - id: "7.2"
+        title: 統合テスト実装
+        details:
+          - 会話フロー全体テスト
+          - 予約完了フローテスト
+          - エラーハンドリングテスト
+        requirements: [1.1, 2.1, 3.1, 4.1]
+        status: pending
+      - id: "7.3"
+        title: E2Eテスト実装
+        details:
+          - 初期画面 → 物件検索 → 内見予約 → 連絡先入力 → 完了 → リセット
+          - 予約なし終了フロー
+          - タイムアウトリセット
+        requirements: [1.5, 5.3, 7.1]
+        status: pending
+      - id: "7.4"
+        title: パフォーマンス最適化
+        details:
+          - ストリーミングTTS実装と検証
+          - 音声キャッシュ実装（キャッシュヒット率40%以上）
+          - テキスト先行表示の動作確認
+          - スキップ機能の動作確認
+          - セッションタイムアウト動作確認
+        requirements: [1.3]
+        status: pending
+
+  - id: "8"
+    title: デプロイと運用準備
+    subtasks:
+      - id: "8.1"
+        title: 環境変数設定
+        details:
+          - Gemini API Key
+          - OpenAI API Key
+          - Google Cloud TTS設定
+          - Supabase Service Role Key
+          - Resend API Key
+          - operator_id設定
+        requirements: [1.1, 4.4, 4.5]
+        status: pending
+      - id: "8.2"
+        priority: true
+        title: 本番環境デプロイ
+        details:
+          - Vercelデプロイ設定
+          - レート制限設定
+          - エラーログ監視設定
+        requirements: [1.5]
+        status: pending
+      - id: "8.3"
+        title: ドキュメント作成
+        details:
+          - 運用マニュアル（店舗設置手順）
+          - トラブルシューティングガイド
+          - オペレーター向け使い方ガイド
+        requirements: [1.1]
+        status: pending

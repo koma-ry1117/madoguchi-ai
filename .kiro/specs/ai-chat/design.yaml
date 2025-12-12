@@ -1,0 +1,174 @@
+feature: ai-chat
+title: AI接客キオスク設計
+
+overview:
+  purpose: 不動産店舗に設置するAI接客キオスク。顧客は会話だけで物件検索から内見予約まで完結し、連絡先を入力して終了する。
+  users: 店舗来店客（ログイン不要、認証不要）
+  impact: 営業担当者不在時も24時間顧客対応が可能になり、機会損失を防ぐ
+
+goals:
+  - 会話のみで物件検索〜内見予約〜連絡先収集を完結
+  - 高齢者にも使いやすい音声対話（音声入力ボタンを画面中央に大きく配置）
+  - 段階的な条件ヒアリング（一度に全条件を言えなくてもOK）
+  - 物件スロットUIで候補物件を可視化
+  - シンプルな1画面UI
+  - セッション完了後の自動リセット
+
+non_goals:
+  - 顧客アカウント管理
+  - 顧客向けの設定画面
+  - 会話履歴の顧客向け閲覧機能
+  - 契約・決済処理
+
+technology_stack:
+  - layer: Frontend
+    choice: React 19 + Next.js 15
+    role: キオスクUI
+  - layer: AI Chat
+    choice: Vercel AI SDK + Gemini 2.5 Flash
+    role: 会話生成、Function Calling
+  - layer: Voice
+    choice: OpenAI Whisper + Google Cloud TTS
+    role: 音声入出力
+  - layer: Database
+    choice: Supabase (Service Role)
+    role: データ保存（認証なし）
+  - layer: Email
+    choice: Resend
+    role: 確認メール送信
+  - layer: State
+    choice: Zustand
+    role: セッション状態管理
+
+components:
+  frontend:
+    - name: KioskInterface
+      intent: キオスク全体のコンテナ
+      requirements: [1, 5, 7]
+      state:
+        - "phase: 'welcome' | 'conversation' | 'contact' | 'complete' | 'goodbye'"
+        - "sessionId: string"
+        - "messages: Message[]"
+        - "propertySlots: Property[] # 会話で追加/絞り込みされる候補物件リスト"
+        - "selectedProperty: Property | null"
+        - "viewingDate: Date | null"
+        - "collectedCriteria: { areas?, budgetMin?, budgetMax?, layouts?, buildingTypes?, stations?, amenities? }"
+
+    - name: AvatarDisplay
+      intent: AIアバターと感情表現
+      requirements: [6]
+
+    - name: ConversationPanel
+      intent: 会話履歴と物件カード表示
+      requirements: [1, 2]
+      design_notes:
+        - AIの応答テキストはストリーミングで即座に表示
+        - 音声はバックグラウンドで準備し、準備完了後に自動再生
+        - ユーザーは音声を待たずにテキストを読める
+        - 音声再生中のみ「スキップ」ボタンを表示
+
+    - name: PropertySlots
+      intent: 候補物件のスロット表示（追加・絞り込み）
+      requirements: [2]
+      behavior:
+        - AIが物件を検索するとスロットに物件が追加される
+        - 顧客が条件を追加するとスロット内の物件が絞り込まれる
+        - 顧客が物件を選択するとAIがその物件について詳しく説明する
+        - 横スクロール可能なカルーセル形式で表示
+
+    - name: VoiceInput
+      intent: 音声録音とテキスト変換
+      requirements: [1]
+
+    - name: ContactForm
+      intent: 連絡先入力フォーム
+      requirements: [4]
+      fields: [name, phone, email]
+
+    - name: CompletionScreen
+      intent: 予約完了画面
+      requirements: [5]
+
+api_routes:
+  - path: POST /api/kiosk/chat
+    description: 認証なしでアクセス可能なキオスク専用チャットAPI
+    request:
+      session_id: string
+      operator_id: string # 店舗識別用（URL等から取得）
+      message: string
+      context: { selected_property_id?, viewing_date? }
+    response: SSE Stream
+    stream_events:
+      - "text: テキスト応答"
+      - "emotion: アバター感情"
+      - "criteria_update: 条件更新"
+      - "properties_add: 物件追加"
+      - "properties_refine: 物件絞り込み"
+      - "property_select: 物件選択"
+      - "booking_confirm: 予約確定"
+      - "request_contact: 連絡先入力要求"
+
+  - path: POST /api/kiosk/complete
+    description: 予約確定と顧客情報登録
+    request:
+      session_id: string
+      operator_id: string
+      customer: { name, phone, email }
+      viewing: { property_id, viewing_date }
+    response: { customer_id, viewing_id, message }
+
+ai_tools:
+  - name: addPropertyCriteria
+    description: 顧客の希望条件を追加し、マッチする物件をスロットに追加
+    parameters: [areas?, rent_min?, rent_max?, layouts?, building_types?, stations?, amenities?]
+
+  - name: refineCriteria
+    description: 既存の条件を変更し、スロット内の物件を絞り込む
+    parameters: [areas?, rent_min?, rent_max?, layouts?, building_types?, stations?, amenities?]
+
+  - name: selectProperty
+    description: 物件を選択して詳細情報を表示
+    parameters: [property_id]
+
+  - name: proposeViewing
+    description: 選択中の物件の内見予約を提案
+    parameters: [property_id]
+
+  - name: confirmViewing
+    description: 内見予約を確定（連絡先入力を促す）
+    parameters: [property_id, viewing_date]
+
+security:
+  - 認証なし（キオスク端末はService Role Key使用）
+  - operator_idでURL/環境変数からデータ分離
+  - レート制限（IP + session_id）
+  - 入力サニタイズ（電話番号・メールアドレスのバリデーション）
+  - セッションタイムアウト（10分操作なしでリセット）
+
+error_handling:
+  conversation:
+    - Gemini APIエラー → 「申し訳ございません、もう一度お話しください」
+    - 物件検索0件 → 条件緩和を提案
+  form:
+    - バリデーションエラー → フィールドハイライト
+    - 送信失敗 → リトライボタン
+
+performance:
+  session:
+    - セッションタイムアウト: 10分
+    - 完了画面自動リセット: 30秒
+  response_optimization:
+    - テキスト先行表示: AI応答はストリーミングで即座に表示、音声は後から再生
+    - ストリーミングTTS: 文単位でチャンク分割し、最初のチャンク準備完了で再生開始
+    - 音声キャッシュ: 頻出フレーズを事前キャッシュ、キャッシュヒット率40%以上目標
+    - スキップ機能: ユーザーが読み上げをスキップして次の操作に進める
+
+testing:
+  unit:
+    - ContactForm: バリデーション
+    - AI Tools: パラメータ検証
+  integration:
+    - 会話フロー全体
+    - 予約完了フロー
+  e2e:
+    - 初期画面 → 物件検索 → 内見予約 → 連絡先入力 → 完了 → リセット

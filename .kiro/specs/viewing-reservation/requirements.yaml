@@ -1,0 +1,86 @@
+feature: viewing-reservation
+title: 内見予約管理要件定義
+
+introduction: |
+  内見予約の管理機能。キオスクでの会話を通じて作成された内見予約をオペレーターが管理・対応する。
+  予約作成時にはメール通知とカレンダー招待を送信する。
+
+important_notes:
+  - 顧客は会話（AI）を通じてのみ予約を作成する
+  - 顧客向けの予約管理画面は存在しない
+
+use_cases:
+  - キオスクでAIと会話した顧客が内見を予約
+  - 予約完了時に顧客の連絡先を収集
+  - オペレーターが予約を確認・管理
+  - 実際の内見対応はオペレーター（人間）が行う
+
+requirements:
+  - id: 1
+    title: 予約自動作成（キオスク連携）
+    objective: As a system, I want to create viewing reservations from kiosk conversations, so that customer bookings are recorded
+    acceptance_criteria:
+      - id: 1.1
+        description: キオスク会話で内見予約が確定すると、システムは予約を「confirmed」ステータスで作成する
+      - id: 1.2
+        description: システムは顧客情報（名前、電話番号、メールアドレス）を保存する
+      - id: 1.3
+        description: システムは会話で選択された物件と希望日時を保存する
+      - id: 1.4
+        description: システムは会話履歴（conversation_id）と予約を紐付ける
+
+  - id: 2
+    title: 予約確定メール送信
+    objective: As a customer, I want to receive confirmation, so that I know my viewing is scheduled
+    acceptance_criteria:
+      - id: 2.1
+        description: 予約が作成されると、システムは顧客に確認メールを送信する
+      - id: 2.2
+        description: システムはオペレーターに予約通知メールを送信する
+      - id: 2.3
+        description: メールにはカレンダー招待（.icsファイル）を添付する
+      - id: 2.4
+        description: メールはReact Emailでデザインされる
+
+  - id: 3
+    title: 内見予約管理（オペレーター向け）
+    objective: As an operator, I want to manage viewings, so that I can organize property showings
+    acceptance_criteria:
+      - id: 3.1
+        description: オペレーターは自社の予約一覧を確認できる
+      - id: 3.2
+        description: オペレーターは予約ステータス（confirmed, completed, cancelled, no_show）を更新できる
+      - id: 3.3
+        description: オペレーターは担当者をアサインできる
+      - id: 3.4
+        description: システムは日付・ステータスでフィルタリングできる
+      - id: 3.5
+        description: オペレーターは予約詳細で会話履歴を確認できる
+
+  - id: 4
+    title: 予約キャンセル（オペレーター操作）
+    objective: As an operator, I want to cancel viewings, so that I can handle schedule changes
+    acceptance_criteria:
+      - id: 4.1
+        description: オペレーターは予約をキャンセルできる
+      - id: 4.2
+        description: キャンセル時、システムはキャンセル理由を記録する
+      - id: 4.3
+        description: システムは顧客にキャンセル通知メールを送信する
+
+  - id: 5
+    title: 内見リマインダー
+    objective: As a customer, I want to receive reminders, so that I don't forget my viewing
+    acceptance_criteria:
+      - id: 5.1
+        description: システムは内見日の前日にリマインダーメールを送信する
+      - id: 5.2
+        description: リマインダーには物件情報と日時を含む
+      - id: 5.3
+        description: リマインダーにはオペレーターの連絡先を含む
+
+roles:
+  - name: kiosk_user
+    description: キオスク端末を利用する店舗来店客（認証不要、会話のみで予約）
+  - name: operator
+    description: 不動産会社（オペレーター）、予約管理を行う

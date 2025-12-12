@@ -1,0 +1,155 @@
+feature: property-management
+title: 物件管理設計
+
+overview:
+  purpose: オペレーター向け物件管理機能とキオスクAI会話用の物件検索APIを提供
+  users: 物件を管理するオペレーター、システム管理者
+  note: 顧客（キオスク利用者）は物件一覧ページにアクセスしない。物件検索はAI会話内でのみ行われる（ai-chat specを参照）
+
+goals:
+  - 高速な物件検索
+  - 美しいUI/UXの物件表示
+  - マルチテナントでのデータ分離
+  - 柔軟なフィルタリング
+
+non_goals:
+  - 物件取り込み（chrome-extension specで対応）
+  - 契約管理
+  - 決済処理
+
+technology_stack:
+  - layer: Frontend
+    choice: React 19 + Next.js 15
+    role: UI Components
+  - layer: Data Fetching
+    choice: TanStack Query
+    role: キャッシュ・フェッチ
+  - layer: UI Components
+    choice: shadcn/ui
+    role: PropertyCard, Table
+  - layer: Database
+    choice: Supabase PostgreSQL
+    role: 物件データ
+  - layer: Image Storage
+    choice: Supabase Storage
+    role: 物件画像
+  - layer: Search
+    choice: PostgreSQL + pgvector
+    role: 条件検索・セマンティック検索
+
+components:
+  frontend:
+    - name: PropertyCard
+      intent: 物件のサマリー表示
+      requirements: [1]
+      props:
+        - property: { id, title, address, rent, layout, images }
+        - onClick: function?
+
+    - name: PropertyFilter
+      intent: 検索条件の入力
+      requirements: [2]
+      props:
+        - filters: PropertyFilters
+        - onFilterChange: function
+      filter_fields: [area?, rent_min?, rent_max?, layout?, building_type?]
+
+    - name: PropertyDetail
+      intent: 物件詳細ページ
+      requirements: [3]
+
+api_routes:
+  - path: GET /api/properties
+    query_params:
+      - { name: area, type: string, description: エリア }
+      - { name: rent_min, type: number, description: 最低賃料 }
+      - { name: rent_max, type: number, description: 最高賃料 }
+      - { name: layout, type: string, description: 間取り }
+      - { name: building_type, type: string, description: 建物種別 }
+      - { name: page, type: number, description: ページ番号 }
+      - { name: limit, type: number, description: 取得件数 }
+    response:
+      properties: "Property[]"
+      pagination: { total, page, limit, total_pages }
+
+  - path: GET /api/properties/[id]
+    response:
+      id: uuid
+      title: string
+      address: string
+      rent: number
+      layout: string
+      description: string?
+      images: "PropertyImage[]"
+      amenities: object?
+
+  - path: PATCH /api/properties/[id]
+    request: { title?, rent?, is_public? }
+    authorization: operator or admin
+
+data_models:
+  property:
+    fields:
+      - id: string
+      - operator_id: string
+      - title: string
+      - address: string
+      - area: string
+      - transaction_type: "'rent' | 'sale'"
+      - rent: number?
+      - sale_price: number?
+      - layout: string
+      - building_type: string
+      - floor_area: number?
+      - station: string?
+      - distance_from_station: number?
+      - description: string?
+      - amenities: "Record<string, boolean>?"
+      - is_public: boolean
+      - images: "PropertyImage[]"
+      - created_at: Date
+      - updated_at: Date
+
+  property_image:
+    fields:
+      - id: string
+      - property_id: string
+      - storage_path: string
+      - display_order: number
+
+security:
+  rls_policies:
+    - name: operator_manage_own_properties
+      description: "オペレーター: 自社の物件のみ管理"
+      using: "operator_id IN (SELECT id FROM operators WHERE user_id = auth.uid())"
+
+    - name: admin_all_properties
+      description: "管理者: 全物件閲覧・管理可能"
+      using: "(SELECT role FROM auth.users WHERE id = auth.uid()) = 'admin'"
+
+  kiosk_api:
+    - /api/kiosk/chat はService Role Keyを使用してDBアクセス
+    - RLSをバイパスし、operator_idでフィルタリング
+    - 顧客向けRLSポリシーは不要（キオスクは認証なしのため）
+
+performance:
+  indexes:
+    - idx_properties_operator_is_public: "(operator_id, is_public)"
+    - idx_properties_area: "(area)"
+    - idx_properties_rent: "(rent)"
+    - idx_properties_search: "(area, rent, layout) WHERE is_public = true"
+  image_optimization:
+    - Next.js Image component
+    - WebP変換
+    - 遅延読み込み
+
+testing:
+  unit:
+    - "PropertyCard: 表示内容"
+    - "PropertyFilter: フィルター変更"
+  integration:
+    - "GET /api/properties: フィルタリング"
+    - "PATCH /api/properties/[id]: 更新"
+  e2e:
+    - 物件一覧 → フィルター → 詳細表示
+    - "オペレーター: 物件編集"

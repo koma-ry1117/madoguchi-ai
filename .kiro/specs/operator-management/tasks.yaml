@@ -1,0 +1,255 @@
+feature: operator-management
+title: オペレーター管理実装タスク
+
+tasks:
+  - id: 1
+    priority: true
+    title: OperatorService実装
+    requirements: [1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.1]
+    files:
+      - path: src/lib/services/operator-service.ts
+        action: create
+      - path: src/schemas/operator.ts
+        action: create
+    details:
+      - Zodスキーマ定義（OperatorCreateSchema, OperatorUpdateSchema）
+      - "createOperator: admin.inviteUserByEmail()で招待メール送信"
+      - "resendInvitation: 招待メール再送信"
+      - "getOperators: 一覧取得（フィルタリング、検索、ページネーション）"
+      - "getOperatorById: 詳細取得（統計付き）"
+      - "updateOperator: 企業情報・サブスクリプション更新"
+      - "deleteOperator: オペレーター削除"
+    acceptance_criteria:
+      - 招待メール方式でオペレーターを登録できる
+      - パスワードは管理者が設定せず、オペレーター自身が設定する
+      - 招待メールを再送信できる
+      - 一覧取得時に統計が含まれる
+    status: pending
+
+  - id: 2
+    priority: true
+    title: StatsService実装
+    requirements: [5.1, 5.2, 5.3, 5.4, 5.5]
+    files:
+      - path: src/lib/services/stats-service.ts
+        action: create
+    details:
+      - "getSystemStats: システム全体統計"
+      - "getOperatorStats: オペレーター別統計"
+      - SQL集計関数使用でパフォーマンス最適化
+    acceptance_criteria:
+      - システム全体の統計が正しく集計される
+      - クエリパフォーマンスが許容範囲（<500ms）
+    status: pending
+
+  - id: 3
+    title: POST /api/admin/operators API
+    requirements: [1.1, 1.2, 1.3, 1.4]
+    files:
+      - path: app/api/admin/operators/route.ts
+        action: create
+    details:
+      - admin権限チェック
+      - リクエストボディバリデーション
+      - admin.inviteUserByEmail()で招待メール送信
+      - operatorsテーブル挿入（status='pending_activation'）
+    acceptance_criteria:
+      - adminのみアクセス可能
+      - 招待メールが送信される
+      - メールアドレス重複時に409 Conflict
+    status: pending
+
+  - id: 4
+    title: POST /api/admin/operators/[id]/resend-invitation API
+    requirements: [1.1]
+    files:
+      - path: app/api/admin/operators/[id]/resend-invitation/route.ts
+        action: create
+    details:
+      - admin権限チェック
+      - status='pending_activation'のみ再送信可能
+      - invited_at更新
+    status: pending
+
+  - id: 5
+    title: GET /api/admin/operators API
+    requirements: [2.1, 2.2, 2.3, 2.4]
+    files:
+      - path: app/api/admin/operators/route.ts
+        action: modify
+    details:
+      - クエリパラメータ解析（subscription_status, is_active, search, page, limit）
+      - OperatorService.getOperators()呼び出し
+    acceptance_criteria:
+      - フィルタリング、検索、ページネーションが機能する
+      - 各オペレーターに統計が含まれる
+    status: pending
+
+  - id: 6
+    title: GET/PATCH/DELETE /api/admin/operators/[id] API
+    requirements: [3.1, 3.2, 3.3, 3.4, 4.1, 4.2, 4.3]
+    files:
+      - path: app/api/admin/operators/[id]/route.ts
+        action: create
+    details:
+      - "GET: 詳細取得（統計含む）"
+      - "PATCH: 更新（企業情報、サブスクリプション）"
+      - "DELETE: 削除（CASCADE確認、監査ログ）"
+    status: pending
+
+  - id: 7
+    priority: true
+    title: GET /api/admin/stats API
+    requirements: [5.1, 5.2, 5.3, 5.4, 5.5]
+    files:
+      - path: app/api/admin/stats/route.ts
+        action: create
+    details:
+      - admin権限チェック
+      - StatsService.getSystemStats()呼び出し
+      - オペレーター数（状態別）、物件数、顧客数、会話数
+    status: pending
+
+  - id: 8
+    title: OperatorListコンポーネント
+    requirements: [2.1, 2.2, 2.3, 2.4]
+    files:
+      - path: src/components/features/admin/OperatorList.tsx
+        action: create
+      - path: src/components/features/admin/OperatorFilter.tsx
+        action: create
+    details:
+      - TanStack Table設定
+      - カラム定義（会社名、ステータス、プラン、物件数、顧客数）
+      - ソート、フィルタリング、ページネーション
+      - アクションボタン（詳細、編集、削除）
+    status: pending
+
+  - id: 9
+    title: OperatorFormコンポーネント
+    requirements: [1.1, 1.2, 1.3, 3.2, 3.3, 3.4]
+    files:
+      - path: src/components/features/admin/OperatorForm.tsx
+        action: create
+    details:
+      - React Hook Form + Zod
+      - パスワードフィールドなし（招待メール方式）
+      - サブスクリプション管理
+      - 新規/編集モード切り替え
+    acceptance_criteria:
+      - パスワードフィールドが存在しない
+      - 新規登録時に招待メールが送信される
+    status: pending
+
+  - id: 10
+    priority: true
+    title: SystemStatsコンポーネント
+    requirements: [5.1, 5.2, 5.3, 5.4, 5.5]
+    files:
+      - path: src/components/features/admin/SystemStats.tsx
+        action: create
+      - path: src/components/features/admin/StatsCard.tsx
+        action: create
+      - path: src/components/features/admin/OperatorChart.tsx
+        action: create
+    details:
+      - StatsCardコンポーネント（数値表示）
+      - OperatorChartコンポーネント（Recharts）
+      - データ取得（useQuery）
+    status: pending
+
+  - id: 11
+    title: 管理者ダッシュボードページ
+    requirements: [5.1, 5.2, 5.3, 5.4, 5.5]
+    files:
+      - path: app/(admin)/dashboard/page.tsx
+        action: create
+      - path: app/(admin)/layout.tsx
+        action: create
+    details:
+      - 認証ガード（adminロールチェック）
+      - SystemStats表示
+      - 最近のオペレーター表示
+      - クイックアクション
+    status: pending
+
+  - id: 12
+    title: オペレーター管理ページ
+    requirements: [1.1, 2.1, 3.1, 4.1]
+    files:
+      - path: app/(admin)/operators/page.tsx
+        action: create
+      - path: app/(admin)/operators/[id]/page.tsx
+        action: create
+      - path: app/(admin)/operators/create/page.tsx
+        action: create
+    details:
+      - 一覧ページ（OperatorList、OperatorFilter）
+      - 詳細・編集ページ（招待メール再送信ボタン含む）
+      - 新規作成ページ
+      - 削除確認ダイアログ
+    status: pending
+
+  - id: 13
+    title: 招待メール受信フロー対応
+    requirements: [1.4]
+    files:
+      - path: app/auth/accept-invitation/page.tsx
+        action: create
+    details:
+      - 招待リンクトークン検証
+      - パスワード設定フォーム表示
+      - パスワード設定後にログイン
+      - "operators.status → 'active'"
+      - operators.activated_at記録
+    status: pending
+
+  - id: 14
+    title: 招待メールテンプレート
+    requirements: [1.1]
+    files:
+      - path: src/emails/operator-invitation.tsx
+        action: create
+    details:
+      - React Emailコンポーネント
+      - パスワード設定リンク
+      - 有効期限（24時間）表示
+      - ブランディング
+    status: pending
+
+  - id: 15
+    priority: true
+    title: useOperators Hook
+    requirements: [2.1]
+    files:
+      - path: src/lib/hooks/useOperators.ts
+        action: create
+      - path: src/lib/hooks/useOperator.ts
+        action: create
+    details:
+      - TanStack Query使用
+      - キャッシュ設定（5分）
+      - 楽観的更新（mutation）
+    status: pending
+
+  - id: 16
+    priority: true
+    title: テスト実装
+    requirements: [All]
+    files:
+      - path: src/lib/services/__tests__/operator-service.test.ts
+        action: create
+      - path: src/lib/services/__tests__/stats-service.test.ts
+        action: create
+      - path: app/api/admin/operators/__tests__/route.test.ts
+        action: create
+      - path: app/api/admin/stats/__tests__/route.test.ts
+        action: create
+    details:
+      - OperatorServiceテスト（createOperator、resendInvitation等）
+      - StatsServiceテスト
+      - APIルートテスト（権限チェック、バリデーション）
+    acceptance_criteria:
+      - カバレッジ80%以上
+      - エッジケースがテストされる
+    status: pending

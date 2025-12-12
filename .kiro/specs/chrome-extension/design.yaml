@@ -1,0 +1,144 @@
+feature: chrome-extension
+title: Chrome拡張機能（物件取り込み）設計
+
+overview:
+  purpose: 不動産ポータルサイトから物件情報をワンクリックで取り込み、GPT-4oで構造化データを抽出する
+  users: オペレーター（不動産会社）がChrome上で使用
+
+goals:
+  - ワンクリックでの物件取り込み
+  - 高精度な構造化データ抽出
+  - 法的証跡としてのHTML保存
+  - シームレスな認証
+
+non_goals:
+  - 自動巡回・スクレイピング
+  - 他ブラウザ対応
+  - 画像のダウンロード（URLのみ参照）
+
+technology_stack:
+  - component: Extension
+    choice: Manifest V3
+    role: Chrome拡張
+  - component: Popup UI
+    choice: React + Vite
+    role: UIレンダリング
+  - component: Content Script
+    choice: TypeScript
+    role: DOM操作
+  - component: Service Worker
+    choice: TypeScript
+    role: バックグラウンド処理
+  - component: API
+    choice: Next.js Route Handler
+    role: 取り込み処理
+  - component: AI
+    choice: OpenAI GPT-4o
+    role: 構造化抽出
+  - component: Storage
+    choice: Supabase Storage
+    role: HTMLスナップショット
+
+manifest:
+  version: "3"
+  permissions: [activeTab, storage]
+  host_permissions:
+    - "https://www.athome.co.jp/*"
+    - "https://suumo.jp/*"
+
+components:
+  content_script:
+    interface:
+      request: { type: 'IMPORT_PROPERTY' }
+      response: { success: boolean, html: string, url: string }
+
+  service_worker:
+    auth_state:
+      isAuthenticated: boolean
+      accessToken: string?
+      user: { id, email, role }?
+
+api_routes:
+  - path: POST /api/properties/import
+    request:
+      html: string
+      url: string
+      force_update: boolean? # 重複時に強制更新
+    responses:
+      success_new:
+        success: true
+        data: { property_id, import_log_id, is_new: true, message }
+      duplicate:
+        success: false
+        error: { code: 'DUPLICATE_PROPERTY', existing_property_id, imported_at }
+      success_update:
+        success: true
+        data: { property_id, import_log_id, is_new: false, message }
+
+gpt_schema:
+  fields:
+    - title: string
+    - address: string
+    - area: string
+    - transaction_type: "rent | sale"
+    - rent: number?
+    - sale_price: number?
+    - layout: string
+    - building_type: string
+    - floor_area: number?
+    - station: string?
+    - distance_from_station: number?
+    - description: string?
+    - amenities: "Record<string, boolean>?"
+
+data_models:
+  property_extension:
+    - source_url: string? # 取り込み元URL（重複チェック用）
+
+  property_import_logs:
+    - id: string
+    - property_id: string?
+    - operator_id: string
+    - source_url: string
+    - html_snapshot_path: string
+    - imported_by: string
+    - imported_at: Date
+    - import_method: "'chrome_extension'"
+    - status: "'success' | 'failed' | 'pending' | 'duplicate_updated'"
+    - is_update: boolean # 更新取り込みかどうか
+    - error_message: string?
+
+database_constraints:
+  - type: unique_index
+    name: idx_properties_source_url_operator
+    table: properties
+    columns: [operator_id, source_url]
+    condition: "WHERE source_url IS NOT NULL"
+
+security:
+  - 認証: Supabase Auth JWT検証
+  - 権限: operator/admin のみ取り込み可能
+  - 入力検証: HTMLサイズ制限（5MB）
+  - CSP: Content Security Policy設定
+  - Storage: Private bucket（認証必須）
+
+error_handling:
+  extension:
+    - 未認証 → ログインページへ誘導
+    - 非対応サイト → エラーメッセージ
+    - ネットワークエラー → リトライオプション
+  api:
+    - "認証エラー (401) → 再認証要求"
+    - "権限エラー (403) → エラーメッセージ"
+    - "重複エラー (409) → 更新オプション提示"
+    - GPT抽出失敗 → 手動入力フォームへフォールバック
+
+testing:
+  unit:
+    - Content Script: HTML抽出
+    - Service Worker: メッセージング
+  integration:
+    - Popup → Content Script → Service Worker 連携
+    - API: 構造化抽出
+  e2e:
+    - 実際の不動産サイトで取り込みテスト

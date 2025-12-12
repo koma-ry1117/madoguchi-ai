@@ -1,0 +1,111 @@
+description: macOS（Apple Silicon）環境での開発セットアップと最適化ガイドライン。
+
+required_tools:
+  - tool: Node.js
+    version: "22.x"
+    use: ランタイム
+  - tool: pnpm
+    version: "9.x"
+    use: パッケージマネージャー
+  - tool: Docker Desktop
+    version: 最新
+    use: コンテナ（ローカルSupabase）
+  - tool: fnm
+    version: 最新
+    use: Node.jsバージョン管理
+
+node_version_management:
+  tool: fnm (Fast Node Manager)
+  reason: Rust製で起動オーバーヘッドがほぼゼロ
+  setup: |
+    # インストール
+    brew install fnm
+
+    # シェル設定（~/.zshrc）
+    eval "$(fnm env --use-on-cd)"
+
+    # プロジェクトのNode.jsを使用
+    fnm use
+  version_file: .nvmrc
+  version: v22.11.0
+  corepack: |
+    corepack enable
+
+    # package.json で固定
+    {
+      "packageManager": "pnpm@9.15.0"
+    }
+
+docker_configuration:
+  virtiofs:
+    description: Apple Silicon環境でのI/O遅延を解消
+    setup:
+      - Docker Desktop > Settings > General
+      - Use Virtualization framework を有効化
+      - File sharing implementation で VirtioFS を選択
+    effect: ファイルシステム操作の時間を最大98%短縮、Next.jsのホットリロードが高速化
+
+  colima_alternative:
+    description: Docker Desktopの代替として、より軽量
+    setup: |
+      brew install colima
+      colima start --cpu 4 --memory 8 --mount-type virtiofs --vm-type vz --vz-rosetta
+    benefits:
+      - Rosetta 2によるx86_64バイナリの高速変換
+      - ライセンス不要
+
+vscode_settings:
+  file: .vscode/settings.json
+  content:
+    typescript.tsdk: node_modules/typescript/lib
+    typescript.enablePromptUseWorkspaceTsdk: true
+    editor.defaultFormatter: esbenp.prettier-vscode
+    editor.formatOnSave: true
+    editor.codeActionsOnSave:
+      source.fixAll.eslint: explicit
+      source.organizeImports: explicit
+    files.exclude:
+      "**/.next": true
+      "**/node_modules": true
+  note: プロジェクトの node_modules 内のTypeScriptを使用することで、CI環境と型推論の挙動が一致
+
+recommended_extensions:
+  - dbaeumer.vscode-eslint
+  - esbenp.prettier-vscode
+  - bradlc.vscode-tailwindcss
+  - prisma.prisma
+
+environment_variables:
+  file: .env.local (gitignore対象)
+  variables:
+    supabase:
+      - NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+      - SUPABASE_SERVICE_ROLE_KEY=eyJ...
+    ai:
+      - GOOGLE_GENERATIVE_AI_API_KEY=...
+      - OPENAI_API_KEY=...
+    email:
+      - RESEND_API_KEY=re_...
+  validation: env.mjsでZodによる起動時検証を実装し、デプロイ前に不足を検知
+
+common_commands:
+  dev: pnpm dev
+  build: pnpm build
+  type_check: pnpm type-check
+  lint: pnpm lint
+  test: pnpm test
+  supabase_start: pnpm supabase:start
+  supabase_gen_types: pnpm supabase:gen-types
+
+troubleshooting:
+  port_conflict:
+    check: lsof -i :3000 / lsof -i :54321
+    kill: kill -9 <PID>
+  docker:
+    status: docker ps
+    restart: pnpm supabase:stop && pnpm supabase:start
+    cache_clear: docker system prune -a
+  nodejs:
+    reinstall: rm -rf node_modules pnpm-lock.yaml && pnpm install
+    fnm_cache_clear: fnm uninstall <version> && fnm install <version>

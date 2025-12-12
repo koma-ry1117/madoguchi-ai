@@ -1,0 +1,87 @@
+feature: marketing-email
+title: 営業メール配信要件定義
+
+introduction: |
+  営業メール・キャンペーン機能は、オペレーター（不動産会社）が新着物件を既存顧客に効率的に配信し、
+  フォローアップ営業を行うための機能です。物件連続追加時のメール重複送信防止、
+  Resend連携による配信停止管理、失敗メールのリトライ機能を含みます。
+
+requirements:
+  - id: 1
+    title: 営業推奨ユーザー検索
+    objective: As an オペレーター, I want 物件追加後に営業メールを送るべき顧客を検索できる機能, so that 連続で物件を追加してもメールが重複送信されることを防げる
+    acceptance_criteria:
+      - id: 1.1
+        description: 物件が追加された時、システムは「営業推奨ユーザーを検索」ボタンを表示する
+      - id: 1.2
+        description: 検索ボタンがクリックされた時、システムは物件条件にマッチする顧客を検索する
+      - id: 1.3
+        description: 検索結果を表示する時、システムは直近N日以内にメール送信済みの顧客を除外する（デフォルト7日）
+      - id: 1.4
+        description: 検索結果を表示する時、システムは配信停止リストに登録されている顧客を除外する
+      - id: 1.5
+        description: システムは検索結果のサマリー（条件マッチ数、除外数、最終配信対象数）を表示する
+      - id: 1.6
+        description: オペレーターが配信対象を選択した時、システムは選択された顧客のみにメールを配信する
+
+  - id: 2
+    title: 新着物件配信キャンペーン
+    objective: As an オペレーター, I want 新着物件を条件マッチする顧客に一括配信できる, so that 効率的に営業活動ができる
+    acceptance_criteria:
+      - id: 2.1
+        description: キャンペーンを作成する時、オペレーターは対象物件、配信条件（エリア、予算等）を設定できる
+      - id: 2.2
+        description: キャンペーンを作成する時、システムは配信対象者のプレビューを表示する
+      - id: 2.3
+        description: 配信を実行する時、システムはメールをキューに登録し、バックグラウンドで順次送信する
+      - id: 2.4
+        description: システムは配信統計（送信数、開封数、クリック数、バウンス数）を記録する
+      - id: 2.5
+        description: 配信が完了した時、システムはキャンペーンのステータスを「completed」に更新する
+
+  - id: 3
+    title: フォローアップ営業メール（リトライ）
+    objective: As an オペレーター, I want 営業メール送信後に反応がない顧客へリトライメールを送りたい, so that 成約率を向上できる
+    acceptance_criteria:
+      - id: 3.1
+        description: メール送信が失敗した時、システムは自動的にリトライキューに登録する
+      - id: 3.2
+        description: システムは最大3回までリトライを試みる
+      - id: 3.3
+        description: リトライする時、システムは指数バックオフ（30分、1時間、2時間）で間隔を空ける
+      - id: 3.4
+        description: 3回失敗した時、システムは最終失敗として記録し、オペレーターに通知する
+      - id: 3.5
+        description: オペレーターは失敗したメールを手動でリトライできる
+
+  - id: 4
+    title: Resend連携による配信停止管理
+    objective: As a システム, I want Resendからのバウンス・苦情通知を受けて自動的に配信停止する, so that メール配信の品質を維持できる
+    acceptance_criteria:
+      - id: 4.1
+        description: Resendからhard_bounceイベントを受信した時、システムはそのメールアドレスを恒久的に配信停止リストに追加する
+      - id: 4.2
+        description: Resendからsoft_bounceイベントを受信した時、システムは7日間の一時的な配信停止を設定する
+      - id: 4.3
+        description: Resendからspam_complaintイベントを受信した時、システムはそのメールアドレスを恒久的に配信停止リストに追加する
+      - id: 4.4
+        description: システムはResend Webhookの署名を検証する
+      - id: 4.5
+        description: メールを送信する前に、システムは配信停止リストをチェックし、該当する場合はスキップする
+      - id: 4.6
+        description: soft_bounceの期限が切れた時、システムは自動的に配信停止を解除する
+
+  - id: 5
+    title: 配信停止リスト管理
+    objective: As an オペレーター, I want 配信停止リストを確認・管理できる, so that メール配信の状況を把握できる
+    acceptance_criteria:
+      - id: 5.1
+        description: オペレーターは自社の配信停止リストを一覧表示できる
+      - id: 5.2
+        description: システムは配信停止理由（hard_bounce、soft_bounce、spam_complaint、unsubscribe、manual）を表示する
+      - id: 5.3
+        description: オペレーターは手動で顧客を配信停止リストに追加できる
+      - id: 5.4
+        description: オペレーターは配信停止理由でフィルタリングできる
+      - id: 5.5
+        description: システムは配信停止日時とバウンス詳細情報を表示する

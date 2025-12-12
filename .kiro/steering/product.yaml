@@ -1,0 +1,55 @@
+name: madoguchi-ai
+description: 不動産業界向け窓口営業支援AIアシスタントシステム。AIアバターが顧客対応を行い、24時間365日の物件検索・提案を実現。
+
+core_capabilities:
+  - name: AI会話エンジン
+    tech: Gemini 2.5 Flash
+    desc: 自然な物件提案・条件ヒアリング
+  - name: 音声対応システム
+    tech: Whisper + Google Cloud TTS
+    desc: 高齢者にも優しいインターフェース
+  - name: 物件取り込み
+    tech: Chrome拡張機能 + Gemini
+    desc: アットホーム等からワンクリック取り込み、構造化
+  - name: マルチテナントSaaS
+    desc: 複数の不動産会社を管理者が一元管理
+  - name: 営業メール配信
+    tech: Resend
+    desc: 新着物件通知、フォローアップ、配信停止管理
+
+target_use_cases:
+  customer:
+    - 24時間いつでも音声・テキストで物件検索
+    - AIアバターとの対話による条件ヒアリング
+    - 内見予約の申し込み
+  operator:
+    - Chrome拡張でワンクリック物件登録
+    - 自社顧客への新着物件メール配信
+    - 顧客対応履歴の確認
+  admin:
+    - オペレーター企業の登録・サブスクリプション管理
+    - システム全体の統計・監査ログ確認
+
+value_proposition:
+  - key: 24時間対応
+    desc: AIが営業時間外も顧客対応、機会損失を削減
+  - key: 高齢者対応
+    desc: 音声入力で誰でも使いやすいUI
+  - key: 業務効率化
+    desc: 物件登録の自動化で手入力不要
+  - key: SaaS展開
+    desc: 他社への横展開でビジネス拡大可能
+
+user_roles:
+  hierarchy: |
+    Admin（gyam様）
+      └─ Operator（不動産会社A, B, C...）
+           └─ Kiosk User（キオスク利用者 - 認証不要）
+  permissions:
+    admin: オペレーター管理、全データ閲覧、システム設定
+    operator: 自社物件取り込み・編集、自社顧客管理、営業メール配信
+    kiosk_user: AI会話、物件検索（会話内）、内見予約（会話内）※認証不要
+
+notes:
+  - 顧客（kiosk_user）は店舗設置キオスク端末から利用し、ログイン不要
+  - 会話完了後に連絡先を入力し、その後は実際の従業員が対応

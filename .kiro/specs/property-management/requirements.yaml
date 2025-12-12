@@ -1,0 +1,99 @@
+feature: property-management
+title: 物件管理要件定義
+
+introduction: |
+  物件の管理機能。オペレーターが登録した物件を管理・編集する。
+  キオスクではAIが会話内で物件を検索・提案するため、顧客向けの物件一覧ページは存在しない。
+
+important_notes:
+  - 顧客（キオスク利用者）は物件一覧ページにアクセスしない
+  - 物件検索はAI会話内でのみ行われる
+
+requirements:
+  - id: 1
+    title: オペレーター向け物件一覧
+    objective: As an operator, I want to browse my property listings, so that I can manage my portfolio
+    acceptance_criteria:
+      - id: 1.1
+        description: オペレーターがダッシュボードにアクセスすると、システムは自社物件一覧を表示する
+      - id: 1.2
+        description: システムは物件画像、タイトル、価格、間取り、エリア、ステータスを表示する
+      - id: 1.3
+        description: システムはページネーション（20件/ページ）を提供する
+      - id: 1.4
+        description: システムは新着順・更新順でソートできる
+
+  - id: 2
+    title: 物件フィルター・検索（オペレーター向け）
+    objective: As an operator, I want to filter properties, so that I can quickly find specific listings
+    acceptance_criteria:
+      - id: 2.1
+        description: エリアフィルターを選択すると、システムはそのエリアの物件のみ表示する
+      - id: 2.2
+        description: 予算範囲を指定すると、システムはその範囲内の物件のみ表示する
+      - id: 2.3
+        description: 間取りを選択すると、システムはその間取りの物件のみ表示する
+      - id: 2.4
+        description: 公開ステータスを選択すると、システムはそのステータスの物件のみ表示する
+      - id: 2.5
+        description: システムはキーワード検索をサポートする
+
+  - id: 3
+    title: 物件詳細・編集
+    objective: As an operator, I want to view and edit property details, so that I can keep listings up to date
+    acceptance_criteria:
+      - id: 3.1
+        description: 物件カードをクリックすると、システムは詳細ページを表示する
+      - id: 3.2
+        description: オペレーターは物件情報を編集できる
+      - id: 3.3
+        description: オペレーターは物件の公開/非公開を切り替えられる
+      - id: 3.4
+        description: オペレーターは物件を削除できる
+      - id: 3.5
+        description: システムは編集履歴を記録する
+
+  - id: 4
+    title: 物件登録（手動）
+    objective: As an operator, I want to manually register properties, so that I can add listings not imported via Chrome extension
+    acceptance_criteria:
+      - id: 4.1
+        description: オペレーターは新規物件を手動で登録できる
+      - id: 4.2
+        description: システムは必須項目のバリデーションを行う
+      - id: 4.3
+        description: オペレーターは複数の画像をアップロードできる
+      - id: 4.4
+        description: システムは登録完了時に確認メッセージを表示する
+
+  - id: 5
+    title: AI会話用物件検索（内部API）
+    objective: As a system, I want to search properties for AI conversation, so that the kiosk can propose properties to customers
+    acceptance_criteria:
+      - id: 5.1
+        description: システムはキオスク会話内でAIが物件を検索できるAPIを提供する
+      - id: 5.2
+        description: システムはoperator_idで自社物件のみをフィルタリングする
+      - id: 5.3
+        description: システムは公開物件のみを検索対象とする
+      - id: 5.4
+        description: システムはセマンティック検索（pgvector）をサポートする
+
+  - id: 6
+    title: マルチテナント分離
+    objective: As a system, I want to separate data by operator, so that each operator only sees their properties
+    acceptance_criteria:
+      - id: 6.1
+        description: システムはRLSでオペレーターごとにデータを分離する
+      - id: 6.2
+        description: オペレーターは自社の物件のみ閲覧・編集可能
+      - id: 6.3
+        description: 管理者がアクセスすると、システムは全オペレーターの物件を表示する
+
+roles:
+  - name: operator
+    description: 不動産会社（オペレーター） - 物件の管理者
+  - name: admin
+    description: システム管理者 - 全物件閲覧可能
+  - name: kiosk_user
+    description: キオスク利用者（認証不要） - 会話内で物件を検索（直接APIアクセスなし）

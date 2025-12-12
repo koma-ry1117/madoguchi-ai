@@ -1,0 +1,143 @@
+description: Feature-Sliced Design (FSD) をNext.js App Router向けに調整したアーキテクチャ。
+
+philosophy:
+  approach: Feature-first + Colocation
+  principles:
+    - app/ はルーティングとレイアウトに特化（薄いレイヤー）
+    - src/features/ にドメインロジックとUIをコロケーション
+    - src/components/ は共有UIコンポーネント
+
+directory_structure:
+  src:
+    app:
+      desc: ルーティング層（極力ロジックを持たせない）
+      subdirs:
+        "(auth)": 認証フロー（login, signup）
+        "(customer)": 顧客向けキオスク（chat）
+        "(operator)": オペレーター向け（dashboard, properties）
+        "(admin)": 管理者向け（operators）
+        api: APIルート（chat, webhooks）
+    features:
+      desc: ドメインロジック層（スライス）
+      slices:
+        auth: 認証機能（components, actions, api, hooks, types）
+        chat: AI会話（components, actions, hooks, stores）
+        properties: 物件管理（components, actions, api, schemas）
+        voice: 音声I/O（components, hooks, utils）
+        avatar: アバター（components, stores）
+        marketing: 営業メール（components, actions, templates）
+    components:
+      ui: Shadcn UIプリミティブ（button, input, card）
+      shared: ドメインに依存しない汎用（Header, Footer）
+    lib:
+      desc: インフラストラクチャ層
+      subdirs:
+        supabase: client.ts, server.ts, middleware.ts
+        ai: gemini.ts
+        email: resend.ts
+    schemas: グローバルZodスキーマ（features横断）
+    types: 全域型定義（database.types.ts - 自動生成）
+
+feature_slice_pattern:
+  example: features/properties/
+  structure:
+    components: PropertyCard, PropertyList, PropertyForm
+    actions: createProperty, updateProperty, deleteProperty
+    api: queries.ts（Supabaseクエリ）
+    hooks: useProperties（TanStack Query）
+    schemas: property.ts（Zod）
+    types: index.ts
+  benefit: 物件機能を修正する場合、src/features/properties フォルダを見るだけで完結
+
+app_router_page_pattern:
+  principle: app/ 内の page.tsx は「構成ファイル」として扱い、ロジックを持たせない
+  example: |
+    // app/(operator)/properties/page.tsx
+    import { PropertyList } from '@/features/properties/components/PropertyList';
+    import { getProperties } from '@/features/properties/api/queries';
+
+    export default async function PropertiesPage() {
+      const properties = await getProperties();
+
+      return (
+        <div className="container py-8">
+          <h1 className="text-2xl font-bold mb-6">物件一覧</h1>
+          <PropertyList properties={properties} />
+        </div>
+      );
+    }
+
+naming_conventions:
+  - type: Files
+    rule: kebab-case または PascalCase
+    example: property-card.tsx, PropertyCard.tsx
+  - type: Components
+    rule: PascalCase
+    example: PropertyCard
+  - type: Functions/Hooks
+    rule: camelCase
+    example: useChat, fetchProperties
+  - type: Server Actions
+    rule: camelCase
+    example: createProperty, deleteProperty
+  - type: Constants
+    rule: SCREAMING_SNAKE_CASE
+    example: MAX_RETRY_COUNT
+  - type: Types/Interfaces
+    rule: PascalCase
+    example: Property, CustomerWithOperator
+  - type: Zod Schemas
+    rule: camelCase + Schema suffix
+    example: propertySchema
+
+import_organization:
+  order:
+    - React/Next.js
+    - External libraries
+    - "Internal - lib/infrastructure"
+    - "Internal - features (specific slice)"
+    - "Internal - shared components"
+    - "Internal - relative paths (same feature)"
+
+path_aliases:
+  "@/*": "./src/*"
+  "@/components/*": "./src/components/*"
+  "@/features/*": "./src/features/*"
+  "@/lib/*": "./src/lib/*"
+  "@/types/*": "./src/types/*"
+
+dependency_rules:
+  allowed:
+    app: [features, components, lib]
+    features: [components/ui, lib, types]
+    components: [components/ui, lib]
+    lib: [types]
+  forbidden:
+    - from: lib
+      to: features
+      reason: インフラがドメインに依存
+    - from: components/ui
+      to: features
+      reason: UIプリミティブがドメインに依存
+    - from: features/A
+      to: features/B
+      reason: スライス間の直接依存
+  note: スライス間でデータを共有する必要がある場合は、親コンポーネント（app/）経由で受け渡す
+
+use_client_boundary:
+  principles:
+    - features/*/components/ 内の対話型コンポーネントには 'use client' を付与
+    - app/ 内の page.tsx は原則Server Component（async function）
+    - components/ui/ は必要に応じて 'use client' を付与
+
+barrel_exports:
+  principle: 各featureに index.ts を配置して公開APIを制御
+  example: |
+    // features/properties/index.ts
+    export { PropertyCard } from './components/PropertyCard';
+    export { PropertyList } from './components/PropertyList';
+    export { useProperties } from './hooks/useProperties';
+    export { propertySchema } from './schemas/property';
+    export type { Property } from './types';
+
+    // 内部実装は非公開（直接インポート禁止）

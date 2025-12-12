@@ -1,0 +1,247 @@
+feature: property-management
+title: 物件管理実装タスク
+
+phases:
+  - name: "Phase 1: データベース基盤"
+    tasks: ["1.1", "1.2", "1.3"]
+  - name: "Phase 2: API実装"
+    tasks: ["2.1", "2.2", "2.3", "2.4", "2.5", "2.6"]
+  - name: "Phase 3: フロントエンド実装"
+    tasks: ["3.1", "3.2", "3.3", "3.4", "3.5", "3.6"]
+  - name: "Phase 4: テスト・最適化"
+    parallel: true
+    tasks: ["4.1", "4.2", "4.3", "5.1", "5.2", "5.3"]
+  - name: "Phase 5: ドキュメント"
+    parallel: true
+    tasks: ["6.1", "6.2", "6.3"]
+
+tasks:
+  - id: "1"
+    title: データベーススキーマとRLS設定
+    requirements: [1, 2, 3, 4, 5, 6]
+    subtasks:
+      - id: "1.1"
+        priority: true
+        title: 物件テーブル（properties）とpgvector拡張を作成
+        requirements: [5]
+        details:
+          - propertiesテーブル定義（id, operator_id, title, address等）
+          - pgvectorエクステンション有効化
+          - embeddingカラム（vector(1536)）追加
+          - 検索インデックス作成
+        status: pending
+      - id: "1.2"
+        priority: true
+        title: 物件画像テーブル（property_images）とストレージ設定
+        requirements: [4]
+        details:
+          - property_imagesテーブル定義
+          - Supabase Storageバケット設定
+          - 画像アップロード用RLSポリシー
+        status: pending
+      - id: "1.3"
+        title: RLSポリシー実装
+        requirements: [6]
+        details:
+          - オペレーター向けポリシー（自社物件のみCRUD）
+          - 管理者向けポリシー（全物件CRUD）
+          - テストデータでRLS動作検証
+        status: pending
+
+  - id: "2"
+    title: API Routes実装
+    requirements: [1, 2, 3, 4, 5]
+    subtasks:
+      - id: "2.1"
+        priority: true
+        title: GET /api/properties 実装
+        requirements: [1, 2]
+        details:
+          - フィルタリング（area, rent_min, rent_max, layout等）
+          - ページネーション、ソート機能
+          - RLSによるoperator_idフィルタリング
+        status: pending
+      - id: "2.2"
+        priority: true
+        title: GET /api/properties/[id] 実装
+        requirements: [3]
+        details:
+          - 物件詳細取得
+          - 画像リレーション取得
+          - RLSチェック
+        status: pending
+      - id: "2.3"
+        title: POST /api/properties 実装
+        requirements: [4]
+        details:
+          - 物件登録エンドポイント
+          - バリデーション、画像アップロード
+          - トランザクション管理
+        status: pending
+      - id: "2.4"
+        title: PATCH /api/properties/[id] 実装
+        requirements: [3]
+        details:
+          - 物件更新エンドポイント
+          - 部分更新サポート
+          - 編集履歴記録
+        status: pending
+      - id: "2.5"
+        priority: true
+        title: DELETE /api/properties/[id] 実装
+        requirements: [3]
+        details:
+          - 物件削除エンドポイント
+          - 関連画像削除
+          - ソフトデリート検討
+        status: pending
+      - id: "2.6"
+        priority: true
+        title: POST /api/kiosk/search 実装
+        requirements: [5]
+        details:
+          - キオスクAI会話用物件検索
+          - pgvectorセマンティック検索
+          - Service Role Keyアクセス
+        status: pending
+
+  - id: "3"
+    title: フロントエンド実装（オペレーター向け物件管理）
+    requirements: [1, 2, 3, 4]
+    subtasks:
+      - id: "3.1"
+        priority: true
+        title: PropertyCardコンポーネント作成
+        requirements: [1]
+        details:
+          - shadcn/uiベースのカードUI
+          - 物件画像、タイトル、価格等表示
+          - レスポンシブ対応
+        status: pending
+      - id: "3.2"
+        priority: true
+        title: PropertyFilterコンポーネント作成
+        requirements: [2]
+        details:
+          - エリア、予算範囲、間取りフィルター
+          - キーワード検索入力
+          - フィルター状態管理
+        status: pending
+      - id: "3.3"
+        title: 物件一覧ページ（/dashboard/properties）実装
+        requirements: [1, 2]
+        details:
+          - PropertyCardを使用した一覧表示
+          - TanStack Queryデータフェッチ
+          - ページネーション、ソート
+        status: pending
+      - id: "3.4"
+        title: 物件詳細ページ（/dashboard/properties/[id]）実装
+        requirements: [3]
+        details:
+          - 物件詳細情報表示
+          - 画像ギャラリー
+          - 編集・削除ボタン
+        status: pending
+      - id: "3.5"
+        title: 物件編集フォーム（PropertyEditor）実装
+        requirements: [3, 4]
+        details:
+          - 全フィールド編集フォーム
+          - React Hook Form + Zod
+          - 画像アップロードUI
+        status: pending
+      - id: "3.6"
+        title: 物件登録ページ（/dashboard/properties/new）実装
+        requirements: [4]
+        details:
+          - PropertyEditorを再利用
+          - 新規登録モード
+          - 登録後リダイレクト
+        status: pending
+
+  - id: "4"
+    title: テスト実装
+    requirements: [1, 2, 3, 4, 5, 6]
+    subtasks:
+      - id: "4.1"
+        priority: true
+        title: APIルートインテグレーションテスト
+        details:
+          - "GET /api/properties: フィルタリング、ページネーション"
+          - "POST /api/properties: バリデーション、画像アップロード"
+          - "PATCH/DELETE: 更新、RLS"
+        status: pending
+      - id: "4.2"
+        priority: true
+        title: フロントエンドユニットテスト
+        details:
+          - PropertyCard表示・クリックイベント
+          - PropertyFilterバリデーション
+          - PropertyEditorフォームバリデーション
+        status: pending
+      - id: "4.3"
+        title: E2Eテスト
+        details:
+          - 物件一覧 → フィルター → 詳細表示
+          - 物件登録 → 編集 → 削除
+          - マルチテナント分離確認
+        status: pending
+
+  - id: "5"
+    title: パフォーマンス最適化
+    requirements: [1, 5]
+    subtasks:
+      - id: "5.1"
+        priority: true
+        title: データベースインデックス最適化
+        requirements: [1, 2, 5]
+        details:
+          - 複合インデックス（area, rent, layout）
+          - pgvectorインデックス（IVFFlatまたはHNSW）
+          - EXPLAIN ANALYZEで性能検証
+        status: pending
+      - id: "5.2"
+        priority: true
+        title: 画像最適化実装
+        requirements: [1, 4]
+        details:
+          - Next.js Imageコンポーネント適用
+          - WebP変換
+          - 遅延読み込み、サムネイル生成
+        status: pending
+      - id: "5.3"
+        title: TanStack Queryキャッシュ戦略設定
+        requirements: [1, 2, 3]
+        details:
+          - staleTime、cacheTimeの調整
+          - 楽観的更新
+          - プリフェッチ
+        status: pending
+
+  - id: "6"
+    title: ドキュメント・デプロイ準備
+    subtasks:
+      - id: "6.1"
+        priority: true
+        title: API仕様書作成
+        details:
+          - OpenAPI/Swaggerドキュメント
+          - リクエスト/レスポンス例
+          - エラーコード一覧
+        status: pending
+      - id: "6.2"
+        priority: true
+        title: 運用ドキュメント作成
+        details:
+          - オペレーター向け操作マニュアル
+          - 管理者向け運用ガイド
+          - トラブルシューティング
+        status: pending
+      - id: "6.3"
+        title: マイグレーションスクリプト準備
+        details:
+          - テーブル作成SQL
+          - インデックス作成スクリプト
+          - ロールバック手順
+        status: pending

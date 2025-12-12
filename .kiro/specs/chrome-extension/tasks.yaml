@@ -1,0 +1,266 @@
+feature: chrome-extension
+title: Chrome拡張機能（物件取り込み）実装タスク
+
+tasks:
+  - id: "1"
+    title: Chrome拡張機能の基盤構築
+    subtasks:
+      - id: "1.1"
+        priority: true
+        title: プロジェクト構造とビルド環境の構築
+        requirements: [1.1, 1.2, 1.3, 2.1]
+        details:
+          - Manifest V3形式のmanifest.json作成
+          - Vite + React + TypeScriptビルド設定
+          - 開発/本番ビルドスクリプト実装
+        status: pending
+      - id: "1.2"
+        priority: true
+        title: Content Scriptによる物件ページ検出機能
+        requirements: [1.1, 1.2, 1.3]
+        details:
+          - アットホーム・SUUMO等の対応サイト判定ロジック
+          - URLパターンマッチングによるサイト検出
+          - 拡張機能アイコンの状態切り替え
+        status: pending
+      - id: "1.3"
+        priority: true
+        title: Background Service Workerのメッセージング基盤
+        requirements: [5.3]
+        details:
+          - Chrome Storage API認証状態管理
+          - Popup/Content Script間メッセージングハンドラ
+          - 拡張機能ライフサイクル管理
+        status: pending
+
+  - id: "2"
+    title: 認証機能の実装
+    subtasks:
+      - id: "2.1"
+        title: Supabase Auth連携とトークン管理
+        requirements: [5.1, 5.2, 5.3]
+        details:
+          - Supabase Auth JWT取得と保存
+          - Chrome Storage認証状態永続化
+          - トークン更新ロジック
+          - 未認証時のログイン促進UI
+        status: pending
+
+  - id: "3"
+    title: Popup UIの実装
+    subtasks:
+      - id: "3.1"
+        priority: true
+        title: Reactベースのポップアップ画面
+        requirements: [2.1, 2.4, 5.1]
+        details:
+          - ログインフォームコンポーネント（未認証時）
+          - 取り込みボタンと状態表示（認証済み時）
+          - ローディング/成功/エラーメッセージUI
+          - shadcn/uiデザイン統合
+        status: pending
+      - id: "3.2"
+        priority: true
+        title: 重複物件の更新オプション表示
+        requirements: [2.4]
+        details:
+          - 重複検出時の既存物件情報表示
+          - 更新/キャンセル選択UI
+          - 更新確認ダイアログ
+        status: pending
+
+  - id: "4"
+    title: 物件取り込み機能の実装
+    subtasks:
+      - id: "4.1"
+        title: Content ScriptによるHTML抽出
+        requirements: [2.2]
+        details:
+          - document.outerHTML取得
+          - URL情報取得
+          - Background Workerへのメッセージ送信
+        status: pending
+      - id: "4.2"
+        title: Background WorkerのAPI連携
+        requirements: [2.3, 2.4]
+        details:
+          - /api/properties/import へPOSTリクエスト
+          - 認証トークン付与
+          - エラーハンドリングとリトライ
+          - 重複エラー（409）処理と更新フロー
+        status: pending
+
+  - id: "5"
+    title: バックエンドAPI実装
+    subtasks:
+      - id: "5.1"
+        title: POST /api/properties/import エンドポイント
+        requirements: [2.3, 5.2]
+        details:
+          - JWT認証検証（operator/adminロール）
+          - HTMLサイズ制限（5MB）検証
+          - source_url重複チェック
+          - force_updateパラメータ対応
+        status: pending
+      - id: "5.2"
+        title: GPT-4oによる構造化データ抽出
+        requirements: [3.1, 3.2]
+        details:
+          - Zodスキーマ定義（title, address, rent, layout等）
+          - generateObject APIによる抽出
+          - サイト別プロンプト最適化
+          - 抽出失敗時エラーハンドリング
+        status: pending
+      - id: "5.3"
+        title: OpenAI Embeddingsによるベクトル生成
+        requirements: [3.3]
+        details:
+          - 物件情報テキスト結合
+          - text-embedding-3-small API呼び出し
+          - DB保存用型変換
+        status: pending
+      - id: "5.4"
+        title: データベース保存処理
+        requirements: [4.2, 4.3]
+        details:
+          - propertiesテーブルINSERT/UPDATE
+          - property_import_logsテーブル記録
+          - source_urlユニーク制約対応
+          - トランザクション管理
+        status: pending
+      - id: "5.5"
+        title: HTMLスナップショットのStorage保存
+        requirements: [4.1]
+        details:
+          - Supabase Storageアップロード
+          - Private bucket設定
+          - ファイルパス生成
+          - Storage URLのDB記録
+        status: pending
+
+  - id: "6"
+    title: データベーススキーマの拡張
+    subtasks:
+      - id: "6.1"
+        priority: true
+        title: propertiesテーブルの拡張
+        requirements: [4.2]
+        details:
+          - source_urlカラム追加
+          - オペレーターごとユニーク制約
+          - マイグレーションファイル作成
+        status: pending
+      - id: "6.2"
+        priority: true
+        title: property_import_logsテーブルの作成
+        requirements: [4.2, 4.3]
+        details:
+          - テーブル定義（id, property_id, operator_id等）
+          - is_updateフラグ追加
+          - statusカラム追加
+          - マイグレーションファイル作成
+        status: pending
+
+  - id: "7"
+    title: 取り込み履歴機能の実装
+    subtasks:
+      - id: "7.1"
+        title: 取り込みログサービスの実装
+        requirements: [4.3]
+        details:
+          - ログ一覧取得API
+          - HTMLスナップショットダウンロード機能
+          - ページネーション対応
+        status: pending
+      - id: "7.2"
+        title: オペレーター向け履歴画面
+        requirements: [4.3]
+        details:
+          - 取り込み履歴一覧ページ
+          - 日時・URL・ステータス表示
+          - HTMLスナップショット閲覧機能
+        status: pending
+
+  - id: "8"
+    title: エラーハンドリングと通知
+    subtasks:
+      - id: "8.1"
+        priority: true
+        title: 拡張機能側のエラー処理
+        requirements: [2.4, 5.1]
+        details:
+          - 未認証エラー → ログインページ誘導
+          - 非対応サイトエラー → メッセージ表示
+          - ネットワークエラー → リトライオプション
+          - 重複エラー → 更新オプション表示
+        status: pending
+      - id: "8.2"
+        priority: true
+        title: API側のエラー処理
+        requirements: [2.3, 3.1]
+        details:
+          - 認証エラー（401）→ 再認証要求
+          - 権限エラー（403）→ エラーメッセージ
+          - 重複エラー（409）→ 既存物件情報レスポンス
+          - GPT抽出失敗 → 詳細エラーログ
+        status: pending
+
+  - id: "9"
+    title: テストの実装
+    subtasks:
+      - id: "9.1"
+        priority: true
+        title: Content Scriptのユニットテスト
+        requirements: [1.2, 2.2]
+        details:
+          - サイト判定ロジックテスト
+          - HTML抽出機能テスト
+        status: pending
+      - id: "9.2"
+        priority: true
+        title: GPT-4o抽出ロジックのテスト
+        requirements: [3.1, 3.2]
+        details:
+          - アットホームHTML抽出テスト
+          - SUUMO HTML抽出テスト
+          - スキーマ検証テスト
+        status: pending
+      - id: "9.3"
+        priority: true
+        title: API統合テスト
+        requirements: [2.3, 4.1, 4.2]
+        details:
+          - 認証検証テスト
+          - 重複チェックテスト
+          - DB保存テスト
+          - Storage保存テスト
+        status: pending
+      - id: "9.4"
+        title: E2Eテスト
+        requirements: [2.1, 2.2, 2.3, 2.4]
+        details:
+          - 実際の不動産サイトでの取り込みテスト
+          - Popup → Content Script → API連携テスト
+          - 重複取り込みシナリオテスト
+        status: pending
+
+  - id: "10"
+    title: 本番デプロイ準備
+    subtasks:
+      - id: "10.1"
+        title: 拡張機能のビルドとパッケージング
+        requirements: [1.1]
+        details:
+          - 本番ビルドスクリプト（minify, tree-shaking）
+          - manifest.json環境変数差し替え
+          - ZIPパッケージ生成
+          - Chrome Web Storeアップロード手順書
+        status: pending
+      - id: "10.2"
+        title: セキュリティ設定の確認
+        requirements: [5.2]
+        details:
+          - Content Security Policy（CSP）設定
+          - Supabase Storage Private bucket設定
+          - 環境変数管理（API URL, Supabase keys）
+        status: pending

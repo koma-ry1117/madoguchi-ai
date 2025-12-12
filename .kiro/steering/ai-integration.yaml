@@ -1,0 +1,182 @@
+description: Gemini 2.5とVercel AI SDKを使用したAI機能の実装ガイドライン。
+
+architecture: |
+  ┌─────────────────────────────────────────┐
+  │           Client Component              │
+  │  useChat() / useCompletion()           │
+  └─────────────────┬───────────────────────┘
+                    │ Streaming
+                    ▼
+  ┌─────────────────────────────────────────┐
+  │      API Route (Node.js Runtime)        │
+  │  /api/chat/route.ts                     │
+  │  - Vercel AI SDK                        │
+  │  - Rate Limiting                        │
+  └─────────────────┬───────────────────────┘
+                    │
+                    ▼
+  ┌─────────────────────────────────────────┐
+  │         Google Gemini API               │
+  │  - Gemini 2.5 Flash (メイン)            │
+  │  - Gemini 2.5 Pro (高精度タスク)        │
+  └─────────────────────────────────────────┘
+
+runtime:
+  requirement: Node.js（Edge Runtimeではなく）
+  reasons:
+    - gRPC依存関係の互換性
+    - HTTP/2実装の安定性
+    - ストリーミングの信頼性
+  config: |
+    export const runtime = 'nodejs';
+    export const maxDuration = 60;
+  timeout_limits:
+    Hobby: 10秒
+    Pro: 60秒
+    Enterprise: 900秒
+
+vercel_ai_sdk:
+  basic_setup: |
+    import { streamText } from 'ai';
+    import { google } from '@ai-sdk/google';
+
+    export async function POST(req: Request) {
+      const { messages } = await req.json();
+
+      const result = streamText({
+        model: google('gemini-2.5-flash-preview-05-20'),
+        messages,
+        system: `あなたは不動産会社の窓口AIアシスタントです。
+    丁寧な敬語で対応し、物件の提案や内見予約のサポートを行います。`,
+      });
+
+      return result.toDataStreamResponse();
+    }
+  client_usage: |
+    'use client';
+
+    import { useChat } from 'ai/react';
+
+    export function ChatInterface() {
+      const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+        api: '/api/chat',
+      });
+
+      return (
+        <form onSubmit={handleSubmit}>
+          {messages.map((m) => (
+            <div key={m.id}>
+              <strong>{m.role}:</strong> {m.content}
+            </div>
+          ))}
+          <input
+            value={input}
+            onChange={handleInputChange}
+            disabled={isLoading}
+            placeholder="メッセージを入力..."
+          />
+        </form>
+      );
+    }
+
+function_calling:
+  schema_definition: Zodスキーマで型安全に定義
+  tools:
+    - name: searchProperties
+      description: 条件に合う物件を検索
+      parameters:
+        - area: 検索エリア（例：文京区）
+        - rentMin: 最低家賃（万円）
+        - rentMax: 最高家賃（万円）
+        - layout: 間取り（例：2LDK）
+    - name: createViewingReservation
+      description: 内見予約を作成
+      parameters:
+        - propertyId: UUID
+        - preferredDate: 希望日時
+        - customerName: 顧客名
+        - customerPhone: 電話番号
+  security_notes:
+    - Function Calling内でのDB操作はRLSが適用されない場合がある
+    - 必要に応じてService Roleではなく認証済みクライアントを使用
+    - ユーザー入力のバリデーションを徹底
+    - 機密操作には追加の認可チェックを実装
+
+rate_limiting:
+  tool: "@upstash/ratelimit"
+  config: slidingWindow(10, '1 m')
+  error_handling:
+    user_message: アクセスが集中しています。しばらく待ってから再試行してください。
+    status: 429
+  gemini_429_handling: |
+    try {
+      const result = await streamText({ /* ... */ });
+      return result.toDataStreamResponse();
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('429')) {
+        return new Response('APIが混み合っています。しばらくお待ちください。', {
+          status: 429,
+        });
+      }
+      throw error;
+    }
+  fallback_strategy:
+    models:
+      - gemini-2.5-pro-preview-05-06
+      - gemini-2.5-flash-preview-05-20
+    note: Proが制限された場合、Flashにフォールバック
+
+structured_output:
+  tool: generateObject
+  schema: Zodスキーマ
+  example: |
+    const { object } = await generateObject({
+      model: google('gemini-2.5-flash-preview-05-20'),
+      schema: propertyExtractionSchema,
+      prompt: `以下のテキストから物件情報を抽出してください:\n\n${rawText}`,
+    });
+
+voice_integration:
+  reference: .kiro/specs/voice-io/design.md
+  flow: STT（Whisper）→ AI（Gemini）→ TTS（Google Cloud TTS）
+
+system_prompt_best_practices:
+  structure:
+    - 役割定義
+    - コミュニケーションスタイル
+    - 制約事項
+    - 出力形式
+  example: |
+    あなたは「まどぐちAI」という不動産会社の窓口AIアシスタントです。
+
+    ## 役割
+    - 顧客の物件探しをサポート
+    - 条件のヒアリングと物件提案
+    - 内見予約の受付
+
+    ## コミュニケーションスタイル
+    - 丁寧な敬語を使用
+    - 簡潔で分かりやすい説明
+    - 高齢者にも配慮した表現
+
+    ## 制約
+    - 契約や法的アドバイスは行わない
+    - 個人情報は最小限のみ収集
+    - 不明点は正直に「担当者に確認します」と伝える
+
+    ## 出力形式
+    - 長文は避け、要点を箇条書きで提示
+    - 物件提案時は主要な特徴を3つまで
+
+cost_optimization:
+  models:
+    gemini_flash:
+      use: 一般的な会話、物件検索
+      cost: 低
+    gemini_pro:
+      use: 複雑な条件の解析、構造化抽出
+      cost: 高
+  strategies:
+    - 通常の会話はFlashを使用
+    - 物件情報の構造化抽出など精度が必要な場合のみProを使用
+    - キャッシュ可能なレスポンス（定型文等）はキャッシュ

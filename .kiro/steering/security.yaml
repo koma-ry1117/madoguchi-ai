@@ -1,0 +1,180 @@
+description: 多層防御（Defense in Depth）に基づくセキュリティ設計。
+
+philosophy:
+  - Defense in depth
+  - Least privilege
+  - Secure by default
+  - Fail closed
+  - RLSでDBレベルの権限制御、アプリケーション層でバイパス不可
+  - Validate at boundaries; sanitize for context; never trust input
+
+defense_in_depth:
+  layers:
+    - layer: 1
+      name: 入力バリデーション
+      tech: Zod
+    - layer: 2
+      name: 認証チェック
+      tech: Supabase Auth
+    - layer: 3
+      name: 認可チェック
+      tech: アプリ層ロジック
+    - layer: 4
+      name: Row Level Security
+      tech: DB層
+
+server_actions_security:
+  warning: Server Actionsはクライアントから呼び出し可能なパブリックAPIエンドポイントと同等
+  required_checks:
+    - step: 1
+      name: 認証チェック
+      required: true
+    - step: 2
+      name: 入力バリデーション
+      required: true
+    - step: 3
+      name: 認可チェック（リソースの所有者確認）
+      required: true
+    - step: 4
+      name: DB操作（RLSも有効）
+      required: true
+  example: |
+    'use server';
+
+    export async function updateProfile(formData: FormData) {
+      // 1. 認証チェック（必須）
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { error: 'ログインしてください' };
+      }
+
+      // 2. 入力バリデーション（必須）
+      const parsed = profileSchema.safeParse(Object.fromEntries(formData));
+      if (!parsed.success) {
+        return { error: parsed.error.flatten() };
+      }
+
+      // 3. 認可チェック（リソースの所有者確認）
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', parsed.data.id)
+        .single();
+
+      if (existing?.user_id !== user.id) {
+        return { error: '権限がありません' };
+      }
+
+      // 4. DB操作（RLSも有効）
+      const { error } = await supabase
+        .from('profiles')
+        .update(parsed.data)
+        .eq('id', parsed.data.id);
+
+      if (error) throw error;
+
+      revalidatePath('/profile');
+      return { success: true };
+    }
+
+auth_getuser_vs_getsession:
+  wrong: |
+    // ❌ getSession()の使用（改ざん可能）
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) { /* 危険 - JWTが改ざんされている可能性 */ }
+  correct: |
+    // ✅ getUser()を使用（Supabase Authサーバーで検証）
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) { /* 安全 - サーバーで検証済み */ }
+  note: サーバーサイド（Server Components, Server Actions, Middleware）では必ず getUser() を使用
+
+authorization_rls:
+  roles:
+    kiosk_user: AI会話、物件検索（会話内）※認証不要
+    operator: 自社物件管理、自社顧客管理、営業メール配信
+    admin: オペレーター管理、全データ閲覧、システム設定
+  policy_patterns:
+    operator_own: |
+      CREATE POLICY "Operators can view own properties"
+        ON properties FOR SELECT
+        USING (operator_id = auth.uid());
+    multitenant: |
+      CREATE POLICY "Users access own operator data"
+        ON customers FOR SELECT
+        USING (
+          operator_id IN (
+            SELECT id FROM operators WHERE user_id = auth.uid()
+          )
+        );
+  service_role_restrictions:
+    allowed:
+      - 管理者用バッチ処理
+      - Webhook処理（外部サービス連携）
+    forbidden:
+      - 通常のユーザー操作
+
+environment_variables:
+  naming:
+    NEXT_PUBLIC_: クライアントで使用可能（ブラウザに露出）
+    no_prefix: サーバーのみ
+  server_only:
+    - SUPABASE_SERVICE_ROLE_KEY
+    - RESEND_API_KEY
+    - GOOGLE_GENERATIVE_AI_API_KEY
+    - OPENAI_API_KEY
+  client_allowed:
+    - NEXT_PUBLIC_SUPABASE_URL
+    - NEXT_PUBLIC_SUPABASE_ANON_KEY
+  validation: |
+    import { z } from 'zod';
+
+    const envSchema = z.object({
+      NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+      SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+      RESEND_API_KEY: z.string().startsWith('re_'),
+      GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1),
+    });
+
+    export const env = envSchema.parse(process.env);
+
+input_validation:
+  tool: Zod
+  note: すべての外部入力をバリデーション
+
+xss_prevention:
+  safe: <p>{userInput}</p> (自動エスケープ)
+  dangerous: dangerouslySetInnerHTML
+  sanitizer: DOMPurify.sanitize(userHtml)
+
+security_headers:
+  - X-Content-Type-Options: nosniff
+  - X-Frame-Options: DENY
+  - Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  - Referrer-Policy: strict-origin-when-cross-origin
+
+rate_limiting:
+  tool: "@upstash/ratelimit"
+  example: Ratelimit.slidingWindow(10, '10 s')
+
+sensitive_data_handling:
+  logging:
+    wrong: console.log('User data:', user)
+    correct: console.log('User ID:', user.id)
+  error_messages:
+    wrong: "return { error: error.message }"
+    correct: |
+      console.error('DB Error:', error); // サーバーログには詳細
+      return { error: '処理中にエラーが発生しました' };
+
+webhook_security:
+  resend:
+    tool: svix
+    pattern: wh.verify(payload, headers)
+
+chrome_extension_security:
+  - Manifest V3使用
+  - 最小限のpermissions
+  - Auth Token暗号化保存
+  - HTTPSのみ許可

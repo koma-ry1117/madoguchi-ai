@@ -1,0 +1,176 @@
+feature: marketing-email
+title: 営業メール配信設計
+
+overview:
+  purpose: |
+    オペレーターが新着物件を既存顧客に効率的に配信し、
+    メール重複送信防止、Resend連携による配信停止管理、失敗メールのリトライ機能を実装する
+
+data_flows:
+  - name: 営業推奨ユーザー検索フロー
+    steps:
+      - オペレーターが物件追加後「営業推奨ユーザーを検索」ボタンをクリック
+      - "API: GET /api/marketing/campaigns/:id/recipients?preview=true"
+      - get_marketing_recipients() RPC呼び出し（条件マッチング、送信済み除外、配信停止除外）
+      - 検索結果サマリーを表示（条件マッチ数、除外数、最終配信対象数）
+      - オペレーターが配信対象を選択・確認
+
+  - name: キャンペーン配信フロー
+    steps:
+      - オペレーターがキャンペーン作成（対象物件、配信条件設定）
+      - プレビュー確認 → 配信実行
+      - marketing_campaign_recipientsにレコード作成
+      - marketing_email_queueにメールをエンキュー
+      - バックグラウンドワーカー（Vercel Cron）がキューを処理
+      - Resend APIでメール送信
+      - email_logsに送信結果を記録
+      - campaign統計を更新
+
+  - name: Resend Webhookフロー
+    steps:
+      - Resendからバウンス/苦情イベント受信
+      - POST /api/webhooks/resend
+      - svix署名検証
+      - イベントタイプ判定
+      - "hard_bounce → email_suppressionsに恒久追加"
+      - "soft_bounce → email_suppressionsに一時追加（7日間）"
+      - "spam_complaint → email_suppressionsに恒久追加"
+      - email_logsのステータス更新
+
+  - name: リトライフロー
+    steps:
+      - 送信失敗時、自動的にmarketing_email_queueに再登録
+      - "retry_count++、next_retry_at設定（指数バックオフ: 30分、1時間、2時間）"
+      - max_retries(3)到達で最終失敗として記録
+      - オペレーターに通知（ダッシュボード表示）
+      - 手動リトライオプション提供
+
+database_tables:
+  - name: email_suppressions
+    description: 配信停止リスト
+    columns:
+      - { name: id, type: UUID, pk: true }
+      - { name: email, type: "VARCHAR(255)", constraint: NOT NULL }
+      - { name: operator_id, type: UUID, fk: "operators(id) ON DELETE CASCADE" }
+      - { name: customer_id, type: UUID, fk: "customers(id) ON DELETE SET NULL" }
+      - { name: reason, type: "VARCHAR(50)", constraint: "CHECK (reason IN ('hard_bounce', 'soft_bounce', 'spam_complaint', 'unsubscribe', 'manual'))" }
+      - { name: resend_event_id, type: "VARCHAR(100)" }
+      - { name: bounce_type, type: "VARCHAR(50)" }
+      - { name: bounce_category, type: "VARCHAR(100)" }
+      - { name: suppressed_at, type: TIMESTAMPTZ, default: NOW() }
+      - { name: expires_at, type: TIMESTAMPTZ, note: soft_bounceの場合のみ }
+      - { name: notes, type: TEXT }
+    unique: [email, operator_id]
+
+  - name: marketing_campaigns
+    description: キャンペーン
+    columns:
+      - { name: id, type: UUID, pk: true }
+      - { name: operator_id, type: UUID, constraint: "NOT NULL, REFERENCES operators(id)" }
+      - { name: name, type: "VARCHAR(255)", constraint: NOT NULL }
+      - { name: description, type: TEXT }
+      - { name: campaign_type, type: "VARCHAR(50)", constraint: "CHECK (campaign_type IN ('new_property', 'follow_up', 'reengagement', 'seasonal', 'custom'))" }
+      - { name: property_ids, type: "UUID[]" }
+      - { name: target_criteria, type: JSONB, default: "'{}'" }
+      - { name: status, type: "VARCHAR(20)", default: "'draft'", constraint: "CHECK (status IN ('draft', 'scheduled', 'sending', 'completed', 'cancelled'))" }
+      - { name: scheduled_at, type: TIMESTAMPTZ }
+      - { name: "total_recipients, sent_count, opened_count, clicked_count, bounced_count", type: INTEGER, default: 0 }
+
+  - name: marketing_campaign_recipients
+    description: 配信対象者
+    unique: [campaign_id, customer_id]
+
+  - name: marketing_email_queue
+    description: メールキュー
+    columns:
+      - { name: status, type: "VARCHAR(20)", constraint: "CHECK (status IN ('queued', 'processing', 'sent', 'failed', 'cancelled'))" }
+      - { name: retry_count, type: INTEGER, default: 0 }
+      - { name: max_retries, type: INTEGER, default: 3 }
+
+rpc_functions:
+  - name: get_marketing_recipients
+    parameters:
+      - p_operator_id: UUID
+      - p_property_ids: "UUID[]"
+      - p_target_criteria: JSONB
+      - p_exclude_recent_days: "INTEGER (DEFAULT 7)"
+    returns:
+      - customer_id: UUID
+      - name: VARCHAR
+      - email: VARCHAR
+      - preferred_areas: "TEXT[]"
+      - budget_max: INTEGER
+      - last_email_sent_at: TIMESTAMPTZ
+      - is_suppressed: BOOLEAN
+      - match_score: FLOAT
+      - match_reasons: "TEXT[]"
+    match_score_logic:
+      - { condition: エリア, max_score: 0.4, description: "重複エリア数 / 対象エリア数 × 0.4" }
+      - { condition: 予算, max_score: 0.3, description: "完全マッチ=0.3、80%以上=0.15" }
+      - { condition: 間取り, max_score: 0.2, description: "配列の重複があれば0.2" }
+      - { condition: 建物種別, max_score: 0.1, description: "配列の重複があれば0.1" }
+
+api_endpoints:
+  - { method: POST, path: /api/marketing/campaigns, description: キャンペーン作成 }
+  - { method: GET, path: "/api/marketing/campaigns/:id", description: キャンペーン詳細 }
+  - { method: GET, path: "/api/marketing/campaigns/:id/recipients", description: 配信対象者検索 }
+  - { method: POST, path: "/api/marketing/campaigns/:id/send", description: 配信実行 }
+  - { method: POST, path: /api/marketing/retry, description: 失敗メールリトライ }
+  - { method: GET, path: /api/marketing/suppressions, description: 配信停止リスト取得 }
+  - { method: POST, path: /api/marketing/suppressions, description: 手動配信停止追加 }
+  - { method: POST, path: /api/webhooks/resend, description: Resend Webhook受信 }
+
+components:
+  server:
+    - path: src/lib/services/campaign-service.ts
+      methods: [create, findRecipients, send]
+    - path: src/lib/services/suppression-service.ts
+      methods: [check, add, remove]
+    - path: src/lib/services/email-queue-service.ts
+      methods: [enqueue, process, retry]
+    - path: src/lib/resend/webhook-handler.ts
+      description: Webhook処理
+
+  client:
+    - CampaignForm.tsx: キャンペーン作成フォーム
+    - RecipientsList.tsx: 配信対象者一覧
+    - RecipientsSearchButton.tsx: 営業推奨ユーザー検索ボタン
+    - RecipientsSummary.tsx: 検索結果サマリー
+    - SuppressionList.tsx: 配信停止リスト
+    - CampaignStats.tsx: キャンペーン統計
+
+security:
+  rls_policies:
+    - オペレーター自社データのみアクセス可能（email_suppressions, marketing_campaigns）
+  webhook:
+    - Resend Webhook署名検証（svix）
+    - イベントIDの重複処理防止
+
+performance:
+  indexes:
+    - idx_email_suppressions_operator_email: "(operator_id, email)"
+    - idx_email_suppressions_expires_at: "(expires_at) WHERE expires_at IS NOT NULL"
+    - idx_marketing_email_queue_status: "(status, next_retry_at)"
+    - idx_email_logs_customer_sent: "(customer_id, sent_at DESC)"
+  batch_processing:
+    - メール送信は100件/バッチで処理
+    - キュー処理はVercel Cron（1分間隔）
+    - "大量配信時はレート制限考慮（Resend: 100/sec）"
+
+dependencies:
+  - { name: resend, version: "^4.0.0", role: メール送信 }
+  - { name: svix, version: "^1.0.0", role: Webhook署名検証 }
+  - { name: ics, version: "^3.0.0", role: カレンダー招待生成（optional） }
+
+testing:
+  unit:
+    - "CampaignService: create, findRecipients, send"
+    - "SuppressionService: check, add, remove"
+    - "EmailQueueService: enqueue, process, retry"
+  integration:
+    - 配信対象者検索（除外ロジック）
+    - Webhook処理（バウンス、苦情）
+    - リトライ処理（指数バックオフ）
+  e2e:
+    - キャンペーン作成 → 配信 → 統計更新
+    - Webhook → 配信停止 → 次回配信で除外

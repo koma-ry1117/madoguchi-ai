@@ -1,0 +1,212 @@
+description: Next.js 15 App Router環境でのSupabase統合パターン。
+
+package_migration:
+  deprecated: "@supabase/auth-helpers-nextjs"
+  use: "@supabase/ssr"
+  install: pnpm add @supabase/supabase-js @supabase/ssr
+
+client_creation:
+  server_component: |
+    // lib/supabase/server.ts
+    import { createServerClient } from '@supabase/ssr';
+    import { cookies } from 'next/headers';
+
+    export async function createClient() {
+      const cookieStore = await cookies(); // Next.js 15では await が必須
+
+      return createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() {
+              return cookieStore.getAll();
+            },
+            setAll(cookiesToSet) {
+              try {
+                cookiesToSet.forEach(({ name, value, options }) =>
+                  cookieStore.set(name, value, options)
+                );
+              } catch {
+                // Server Componentからの呼び出し時は無視
+              }
+            },
+          },
+        }
+      );
+    }
+
+  client_component: |
+    // lib/supabase/client.ts
+    import { createBrowserClient } from '@supabase/ssr';
+
+    export function createClient() {
+      return createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+    }
+
+middleware_session_management:
+  importance: Server Componentsはクッキーを読み取れるが、書き込みはできない。トークンリフレッシュはMiddlewareで行う。
+  key_points:
+    - getUser() を使用（getSession() はクライアントから改ざん可能）
+    - クッキーがセットされた supabaseResponse を必ず return
+    - request.cookies と response.cookies の両方を更新
+  pattern: |
+    // middleware.ts
+    import { createServerClient } from '@supabase/ssr';
+    import { NextResponse, type NextRequest } from 'next/server';
+
+    export async function middleware(request: NextRequest) {
+      let supabaseResponse = NextResponse.next({ request });
+
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() {
+              return request.cookies.getAll();
+            },
+            setAll(cookiesToSet) {
+              cookiesToSet.forEach(({ name, value }) =>
+                request.cookies.set(name, value)
+              );
+              supabaseResponse = NextResponse.next({ request });
+              cookiesToSet.forEach(({ name, value, options }) =>
+                supabaseResponse.cookies.set(name, value, options)
+              );
+            },
+          },
+        }
+      );
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user && !request.nextUrl.pathname.startsWith('/login') &&
+          !request.nextUrl.pathname.startsWith('/auth') &&
+          !request.nextUrl.pathname.startsWith('/chat')) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
+      }
+
+      return supabaseResponse;
+    }
+
+type_generation:
+  commands:
+    local: supabase gen types typescript --local > src/types/database.types.ts
+    remote: supabase gen types typescript --project-id <project-id> > src/types/database.types.ts
+  usage: |
+    import { Database } from '@/types/database.types';
+
+    type Property = Database['public']['Tables']['properties']['Row'];
+    type PropertyInsert = Database['public']['Tables']['properties']['Insert'];
+    type PropertyUpdate = Database['public']['Tables']['properties']['Update'];
+
+    const supabase = createClient<Database>();
+  note: database.types.ts は自動生成、手動編集禁止
+
+data_fetching:
+  server_component: |
+    export default async function PropertiesPage() {
+      const supabase = await createClient();
+
+      const { data: properties, error } = await supabase
+        .from('properties')
+        .select(`*, operator:operators(name)`)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return <PropertyList properties={properties} />;
+    }
+
+  server_action: |
+    'use server';
+
+    export async function createProperty(formData: FormData) {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return { error: 'Unauthorized' };
+
+      const parsed = propertySchema.omit({ id: true }).safeParse(Object.fromEntries(formData));
+      if (!parsed.success) return { error: parsed.error.flatten() };
+
+      const { error } = await supabase
+        .from('properties')
+        .insert({ ...parsed.data, operator_id: user.id });
+
+      if (error) return { error: '保存に失敗しました' };
+
+      revalidatePath('/properties');
+      return { success: true };
+    }
+
+realtime_subscriptions:
+  note: Client Componentで使用
+  pattern: |
+    'use client';
+
+    export function RealtimeMessages({ chatId }: { chatId: string }) {
+      const [messages, setMessages] = useState<Message[]>([]);
+      const supabase = createClient();
+
+      useEffect(() => {
+        const fetchMessages = async () => {
+          const { data } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('chat_id', chatId)
+            .order('created_at');
+          if (data) setMessages(data);
+        };
+        fetchMessages();
+
+        const channel = supabase
+          .channel(`chat:${chatId}`)
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `chat_id=eq.${chatId}`,
+          }, (payload) => {
+            setMessages((prev) => [...prev, payload.new as Message]);
+          })
+          .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+      }, [chatId, supabase]);
+    }
+
+storage:
+  upload: |
+    const { data, error } = await supabase.storage
+      .from('property-images')
+      .upload(`${propertyId}/${file.name}`, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+  signed_url: |
+    const { data } = await supabase.storage
+      .from('property-images')
+      .createSignedUrl(path, 3600);
+
+common_pitfalls:
+  - name: クッキーの非同期アクセス
+    wrong: const cookieStore = cookies();
+    correct: const cookieStore = await cookies();
+
+  - name: getSession vs getUser
+    wrong: const { data: { session } } = await supabase.auth.getSession();
+    correct: const { data: { user } } = await supabase.auth.getUser();
+
+  - name: Middlewareからレスポンスを返さない
+    wrong: |
+      await supabase.auth.getUser();
+      return NextResponse.next();
+    correct: |
+      await supabase.auth.getUser();
+      return supabaseResponse;

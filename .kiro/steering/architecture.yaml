@@ -1,0 +1,189 @@
+description: Next.js 15 App Router と React 19 における設計パターンと注意点。
+
+nextjs_15_breaking_changes:
+  async_request_api:
+    description: cookies(), headers(), params などのリクエストAPIが非同期化
+    wrong: |
+      const cookieStore = cookies();
+      const token = cookieStore.get('token');
+    correct: |
+      const cookieStore = await cookies();
+      const token = cookieStore.get('token');
+    impact: Supabaseクライアント生成、認証チェック、ミドルウェア処理すべてに影響
+
+  cache_strategy:
+    description: fetchのデフォルトがキャッシュなし（cache: 'no-store' 相当）に変更
+    strategies:
+      dynamic_data: キャッシュなし（デフォルトのまま）
+      static_data: unstable_cache または next: { revalidate }
+    example: |
+      import { unstable_cache } from 'next/cache';
+
+      const getPrefectures = unstable_cache(
+        async () => {
+          const { data } = await supabase.from('prefectures').select('*');
+          return data;
+        },
+        ['prefectures'],
+        { revalidate: 3600 } // 1時間
+      );
+
+  request_memoization:
+    description: 同一リクエスト内で同じデータを複数回取得する場合、Reactの cache でメモ化
+    example: |
+      import { cache } from 'react';
+
+      export const getCurrentUser = cache(async () => {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        return user;
+      });
+
+      // Layout と Page の両方で呼んでも1回のみ実行
+
+react_19_strict_mode:
+  hydration_mismatch:
+    description: サーバーとクライアントでDOMが異なると、ハイドレーションエラーが発生
+    causes_and_solutions:
+      - cause: 不正なHTMLネスト（p内のdiv等）
+        solution: HTML仕様に準拠したマークアップ
+      - cause: window/localStorageの早期アクセス
+        solution: useEffect内またはuseSyncExternalStoreを使用
+      - cause: 日時表示（タイムゾーン差）
+        solution: サーバーでフォーマット、またはClient Component化
+      - cause: ブラウザ拡張機能によるDOM変更
+        solution: 開発時はシークレットウィンドウで検証
+    pattern: |
+      // ✅ 正しいパターン
+      function Component() {
+        const [width, setWidth] = useState<number | null>(null);
+
+        useEffect(() => {
+          setWidth(window.innerWidth);
+        }, []);
+
+        if (width === null) return <div>Loading...</div>;
+        return <div>{width > 768 ? 'Desktop' : 'Mobile'}</div>;
+      }
+
+  effect_double_execution:
+    description: Strict Modeでは開発環境でEffectが2回実行される
+    solution: クリーンアップ関数を必ず返す
+    example: |
+      useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            // 処理
+          }
+        );
+
+        return () => {
+          subscription.unsubscribe(); // 必須
+        };
+      }, []);
+
+component_boundaries:
+  types:
+    server_component:
+      use: データ取得、静的レンダリング
+      marker: デフォルト
+    client_component:
+      use: インタラクション、ブラウザAPI
+      marker: "'use client'"
+  principles:
+    - できる限りServer Componentを使用（バンドルサイズ削減）
+    - useState, useEffect, イベントハンドラが必要な場合のみClient Component
+    - Server ComponentからClient Componentをインポートして子として渡すのはOK
+
+  composition_pattern:
+    description: Server ComponentのchildrenとしてClient Componentにデータを渡す
+    example: |
+      // ServerWrapper.tsx (Server Component)
+      export default async function ServerWrapper() {
+        const data = await fetchData();
+        return <ClientComponent data={data} />;
+      }
+
+      // ClientComponent.tsx
+      'use client';
+      export function ClientComponent({ data }: { data: Data }) {
+        const [state, setState] = useState(data);
+        // インタラクティブな処理
+      }
+
+routing_patterns:
+  route_groups:
+    description: URLに影響を与えずにレイアウトをグループ化
+    structure:
+      "(auth)": 認証フロー用レイアウト
+      "(customer)": 顧客向けレイアウト（キオスク）
+      "(operator)": オペレーター向けレイアウト
+      "(admin)": 管理者向けレイアウト
+
+  parallel_routes:
+    description: 同時に複数のページセグメントをレンダリング
+    example: "@stats/page.tsx, @activity/page.tsx"
+
+  loading_error_states:
+    - loading.tsx: Suspense boundary
+    - error.tsx: Error boundary
+
+data_fetching_patterns:
+  server_component: |
+    export default async function PropertiesPage() {
+      const supabase = await createClient();
+      const { data: properties } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('is_active', true);
+
+      return <PropertyList properties={properties} />;
+    }
+
+  server_actions:
+    description: データ変更（mutation）は Server Actions を使用
+    pattern: |
+      'use server';
+
+      export async function createProperty(formData: FormData) {
+        const supabase = await createClient();
+
+        // 認証チェック
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Unauthorized');
+
+        // バリデーション
+        const parsed = propertySchema.safeParse(Object.fromEntries(formData));
+        if (!parsed.success) {
+          return { error: parsed.error.flatten() };
+        }
+
+        // DB操作
+        const { error } = await supabase.from('properties').insert(parsed.data);
+        if (error) throw error;
+
+        revalidatePath('/properties');
+        return { success: true };
+      }
+
+performance_optimization:
+  dynamic_rendering:
+    force_static: "export const dynamic = 'force-static'"
+    force_dynamic: "export const dynamic = 'force-dynamic'"
+    isr: "export const revalidate = 3600"
+
+  streaming:
+    description: loading.tsx または Suspense でストリーミングを有効化
+    example: |
+      import { Suspense } from 'react';
+
+      export default function Page() {
+        return (
+          <div>
+            <h1>Dashboard</h1>
+            <Suspense fallback={<StatsSkeleton />}>
+              <Stats /> {/* 非同期コンポーネント */}
+            </Suspense>
+          </div>
+        );
+      }

@@ -1,0 +1,166 @@
+feature: viewing-reservation
+title: 内見予約管理設計
+
+overview:
+  purpose: キオスク会話で作成された内見予約をオペレーターが管理する機能。顧客は会話を通じてのみ予約を行い、オペレーターがその後の対応を行う。
+  users:
+    - キオスク利用者（予約作成は会話内で完結）
+    - オペレーター（予約管理）
+
+goals:
+  - キオスク会話からの予約自動作成
+  - 自動メール通知
+  - カレンダー連携
+  - オペレーター向け予約管理ダッシュボード
+
+non_goals:
+  - 顧客向け予約管理画面（キオスクモデルでは不要）
+  - 空き状況のリアルタイム管理
+  - オンライン内見
+  - 決済機能
+
+technology_stack:
+  - component: Frontend
+    choice: React 19 + Next.js 15
+    role: オペレーター管理画面
+  - component: Email
+    choice: Resend + React Email
+    role: メール送信
+  - component: Calendar
+    choice: ical-generator
+    role: ICSファイル生成
+  - component: Cron
+    choice: Vercel Cron
+    role: リマインダー送信
+  - component: Database
+    choice: Supabase
+    role: 予約データ
+
+components:
+  frontend:
+    - name: ViewingList
+      intent: 予約一覧・管理（オペレーター専用）
+      requirements: [3]
+      props:
+        - viewings: "ViewingWithDetails[]"
+        - onStatusChange: function
+        - onAssign: function
+
+    - name: ViewingDetail
+      intent: 予約詳細・会話履歴閲覧（オペレーター専用）
+      requirements: [3]
+      props:
+        - viewing: ViewingWithDetails
+        - conversation: Conversation?
+        - onStatusChange: function
+        - onCancel: function
+
+    - name: ViewingFilter
+      intent: 予約フィルタリング
+      requirements: [3]
+      filter_fields: [status?, from_date?, to_date?, assigned_to?]
+
+api_routes:
+  - path: GET /api/viewings
+    auth: オペレーター認証必須
+    query_params:
+      - { name: status, type: string, description: ステータスフィルター }
+      - { name: from_date, type: string, description: 開始日 }
+      - { name: to_date, type: string, description: 終了日 }
+      - { name: assigned_to, type: string, description: 担当者フィルター }
+    response:
+      viewings: "{ id, viewing_date, status, customer, property, assigned_to, conversation_id }[]"
+      pagination: { total, page, limit }
+
+  - path: PATCH /api/viewings/[id]
+    auth: オペレーター認証必須
+    request: { status?, assigned_to?, notes? }
+
+  - path: DELETE /api/viewings/[id]
+    description: キャンセル
+    request: { cancellation_reason }
+    response: { message, email_sent }
+
+  - path: GET /api/viewings/[id]/conversation
+    response:
+      conversation: { id, messages, started_at, ended_at }
+
+email_templates:
+  - name: ViewingConfirmationEmail
+    for: 顧客向け
+    props: [customerName, propertyTitle, propertyAddress, viewingDate, viewingTime, operatorName, operatorPhone]
+
+  - name: ViewingNotificationEmail
+    for: オペレーター向け
+    props: [customerName, customerPhone, customerEmail, propertyTitle, viewingDate, conversationSummary?]
+
+  - name: ViewingReminderEmail
+    props: [customerName, propertyTitle, propertyAddress, viewingDate, viewingTime, operatorName, operatorPhone]
+
+  - name: ViewingCancellationEmail
+    props: [customerName, propertyTitle, viewingDate, cancellationReason, operatorPhone]
+
+ics_generator:
+  input:
+    - title: string
+    - description: string
+    - start: Date
+    - end: Date
+    - location: string
+    - organizer: { name, email }?
+  output: ICS file string
+
+data_models:
+  viewing:
+    fields:
+      - id: string
+      - customer_id: string
+      - property_id: string
+      - operator_id: string
+      - conversation_id: string? # キオスク会話との紐付け
+      - viewing_date: Date
+      - duration_minutes: number
+      - status: "'confirmed' | 'completed' | 'cancelled' | 'no_show'"
+      - assigned_to: string?
+      - notes: string?
+      - cancelled_at: Date?
+      - cancellation_reason: string?
+      - reminder_sent: boolean
+      - created_at: Date
+      - updated_at: Date
+
+  customer:
+    fields:
+      - id: string
+      - operator_id: string
+      - name: string
+      - phone: string
+      - email: string
+      - source: "'kiosk' | 'web' | 'manual'" # キオスクの場合は'kiosk'
+      - created_at: Date
+      - updated_at: Date
+
+error_handling:
+  api:
+    - "403 Forbidden: 他社の予約にアクセス"
+    - "404 Not Found: 予約が存在しない"
+    - "409 Conflict: すでにキャンセル済み"
+  email:
+    - 送信失敗 → リトライキューに追加
+    - バウンス → 配信停止リストに追加
+
+security:
+  - "RLS: オペレーターは自社の予約のみ閲覧・更新可能"
+  - "認証: オペレーター向けAPIは認証必須"
+  - "キオスクAPI: operator_idでデータ分離"
+
+testing:
+  unit:
+    - "ICS Generator: フォーマット"
+    - "ViewingService: CRUD操作"
+  integration:
+    - キオスク完了 → 予約作成 → メール送信
+    - ステータス更新
+  e2e:
+    - "オペレーター: 一覧表示 → 詳細 → ステータス更新"
+    - キャンセルフロー

@@ -1,0 +1,148 @@
+description: Next.js App Router Route Handlersを使用。
+
+philosophy:
+  - Prefer predictable, resource-oriented design
+  - RLSによりDBレベルでセキュリティ担保
+  - Zodで入力バリデーション、型安全なレスポンス
+
+endpoint_pattern: "/api/{resource}[/{id}][/{sub-resource}]"
+
+examples:
+  - GET /api/properties: 物件一覧
+  - GET /api/properties/:id: 物件詳細
+  - POST /api/properties/import: 物件取り込み
+  - POST /api/chat: AI会話
+  - POST /api/marketing/campaigns: キャンペーン作成
+  - GET /api/marketing/campaigns/:id/recipients: 配信対象者検索
+  - POST /api/webhooks/resend: Resend Webhook
+
+response_format:
+  success:
+    success: true
+    data: "{ ... }"
+    pagination:
+      total: 100
+      page: 1
+      limit: 20
+  error:
+    success: false
+    error:
+      code: VALIDATION_ERROR
+      message: Invalid request
+      details:
+        - field: email
+          message: Invalid email format
+
+status_codes:
+  - code: 200
+    desc: 成功（GET, PUT, PATCH）
+  - code: 201
+    desc: 作成成功（POST）
+  - code: 204
+    desc: 削除成功（DELETE）
+  - code: 400
+    desc: バリデーションエラー
+  - code: 401
+    desc: 未認証
+  - code: 403
+    desc: 権限不足
+  - code: 404
+    desc: リソース不存在
+  - code: 429
+    desc: レート制限
+  - code: 500
+    desc: サーバーエラー
+
+authentication:
+  supabase_auth: |
+    import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+
+    export async function GET(request: Request) {
+      const supabase = createRouteHandlerClient({ cookies });
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: { code: 'UNAUTHORIZED' } },
+          { status: 401 }
+        );
+      }
+    }
+  role_check: |
+    const { data: operator } = await supabase
+      .from('operators')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!operator) {
+      return NextResponse.json(
+        { success: false, error: { code: 'FORBIDDEN' } },
+        { status: 403 }
+      );
+    }
+
+validation:
+  tool: Zod
+  pattern: |
+    const createCampaignSchema = z.object({
+      name: z.string().min(1).max(255),
+      campaign_type: z.enum(['new_property', 'follow_up', 'reengagement']),
+      property_ids: z.array(z.string().uuid()).optional(),
+      target_criteria: z.object({
+        preferred_areas: z.array(z.string()).optional(),
+        budget_max: z.number().positive().optional(),
+      }).optional(),
+    });
+
+    export async function POST(request: Request) {
+      const body = await request.json();
+      const result = createCampaignSchema.safeParse(body);
+
+      if (!result.success) {
+        return NextResponse.json({
+          success: false,
+          error: { code: 'VALIDATION_ERROR', details: result.error.errors },
+        }, { status: 400 });
+      }
+
+      const validatedData = result.data;
+    }
+
+pagination_filtering: |
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get('page') || '1');
+  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
+  const offset = (page - 1) * limit;
+
+  const { data, count } = await supabase
+    .from('properties')
+    .select('*', { count: 'exact' })
+    .range(offset, offset + limit - 1);
+
+rate_limiting:
+  tool: "@upstash/ratelimit"
+  pattern: |
+    const ratelimit = new Ratelimit({
+      redis: kv,
+      limiter: Ratelimit.slidingWindow(10, '10s'),
+    });
+
+    const { success } = await ratelimit.limit(ip);
+    if (!success) {
+      return new Response('Too Many Requests', { status: 429 });
+    }
+
+webhook_security:
+  resend:
+    tool: svix
+    pattern: |
+      import { Webhook } from 'svix';
+
+      export async function POST(request: Request) {
+        const payload = await request.text();
+        const headers = Object.fromEntries(request.headers);
+
+        const wh = new Webhook(process.env.RESEND_WEBHOOK_SECRET!);
+        const event = wh.verify(payload, headers);
+      }

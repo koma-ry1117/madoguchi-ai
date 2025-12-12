@@ -1,0 +1,112 @@
+feature: ai-chat
+title: AI接客システム要件定義
+
+introduction: |
+  不動産店舗に設置するAI接客システム。顧客はAIアバターとの会話のみで物件検索から内見予約までを完結する。
+  営業担当者が不在でも24時間顧客対応が可能。最後に連絡先を入力してもらい、実際の従業員が後続対応を行う。
+
+use_cases:
+  - 不動産店舗のタブレット/PCに常時表示
+  - 営業担当者が留守・接客中でも顧客対応可能
+  - 顧客は会話だけで操作（設定画面等は不要）
+  - 内見予約完了後、連絡先入力で終了
+
+requirements:
+  - id: 1
+    title: AI会話インターフェース
+    objective: As a customer, I want to talk with an AI assistant, so that I can find properties without staff help
+    acceptance_criteria:
+      - id: 1.1
+        description: 画面にアクセスすると、AIアバターが挨拶して会話を開始する
+      - id: 1.2
+        description: システムは音声入力とテキスト入力の両方をサポートする
+      - id: 1.3
+        description: AIが応答すると、システムは音声で読み上げる（高齢者対応）
+      - id: 1.4
+        description: システムは会話履歴を画面に表示する
+      - id: 1.5
+        description: 一定時間操作がない場合、システムは初期画面にリセットする
+
+  - id: 2
+    title: 会話による物件検索
+    objective: As a customer, I want to search properties through conversation, so that I can find homes matching my needs
+    acceptance_criteria:
+      - id: 2.1
+        description: AIは会話を通じて顧客の希望条件をヒアリングする（エリア、予算、間取り等）
+      - id: 2.2
+        description: 条件が十分に集まったとき、AIは物件を検索して提案する
+      - id: 2.3
+        description: AIは物件カードを会話内に表示して説明する
+      - id: 2.4
+        description: 顧客が物件に興味を示したとき、AIは詳細情報を説明する
+      - id: 2.5
+        description: 条件に合う物件がない場合、AIは条件の緩和を提案する
+
+  - id: 3
+    title: 会話による内見予約
+    objective: As a customer, I want to book a viewing through conversation, so that I can see properties in person
+    acceptance_criteria:
+      - id: 3.1
+        description: 顧客が内見を希望したとき、AIは希望日時を会話で確認する
+      - id: 3.2
+        description: AIは予約内容を確認して顧客に復唱する
+      - id: 3.3
+        description: 予約確定後、システムは連絡先入力フォームを表示する
+
+  - id: 4
+    title: 顧客情報収集
+    objective: As a system, I want to collect customer contact info, so that staff can follow up
+    acceptance_criteria:
+      - id: 4.1
+        description: 内見予約が確定すると、システムは連絡先入力画面を表示する
+      - id: 4.2
+        description: "入力項目: 名前、電話番号、メールアドレス"
+      - id: 4.3
+        description: システムは入力バリデーションを行う（電話番号形式、メール形式）
+      - id: 4.4
+        description: 入力完了後、システムは確認メールを送信する
+      - id: 4.5
+        description: 入力完了後、システムはオペレーターに通知メールを送信する
+      - id: 4.6
+        description: システムは顧客情報と予約情報をDBに保存する
+
+  - id: 5
+    title: セッション完了とリセット
+    objective: As a system, I want to reset after completion, so that the next customer can use it
+    acceptance_criteria:
+      - id: 5.1
+        description: 予約完了後、システムは「ありがとうございました」画面を表示する
+      - id: 5.2
+        description: 完了画面には予約内容サマリーを表示する
+      - id: 5.3
+        description: 完了画面で一定時間経過 or 「終了」ボタンで、システムは初期画面にリセットする
+      - id: 5.4
+        description: リセット時、会話履歴と入力情報はクリアする
+
+  - id: 6
+    title: アバター感情表現
+    objective: As a customer, I want to see natural avatar expressions, so that I feel comfortable talking
+    acceptance_criteria:
+      - id: 6.1
+        description: システムは5種類の表情（neutral, happy, thinking, apologetic, excited）を切り替える
+      - id: 6.2
+        description: AIの応答内容に応じて適切な表情を自動選択する
+      - id: 6.3
+        description: 表情切り替えはアニメーションで滑らかに行う
+
+  - id: 7
+    title: 予約なし終了
+    objective: As a customer, I want to leave without booking, so that I can just browse properties
+    acceptance_criteria:
+      - id: 7.1
+        description: 顧客は会話途中でも「終了」できる
+      - id: 7.2
+        description: 予約せず終了すると、システムは「またのご来店をお待ちしています」と表示する
+      - id: 7.3
+        description: 予約なし終了時も会話ログはDBに保存する（分析用）
+
+roles:
+  - name: customer
+    description: 店舗来店客（ログイン不要）
+  - name: operator
+    description: 不動産会社（オペレーター）

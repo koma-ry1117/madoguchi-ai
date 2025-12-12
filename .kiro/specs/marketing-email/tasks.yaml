@@ -1,0 +1,300 @@
+feature: marketing-email
+title: 営業メール配信実装タスク
+
+tasks:
+  - id: 1
+    title: データベーステーブル作成
+    requirements: [1.1, 2.1, 3.1, 4.1, 5.1]
+    files:
+      - path: supabase/migrations/20250101000001_create_marketing_tables.sql
+        action: create
+    subtasks:
+      - id: "1.1"
+        title: email_suppressionsテーブル作成
+        details:
+          - カラム定義（id, email, operator_id, customer_id, reason等）
+          - reason CHECK制約（hard_bounce, soft_bounce, spam_complaint, unsubscribe, manual）
+          - UNIQUE制約（email, operator_id）
+        status: pending
+      - id: "1.2"
+        title: marketing_campaignsテーブル作成
+        details:
+          - campaign_type CHECK制約
+          - status CHECK制約
+        status: pending
+      - id: "1.3"
+        title: marketing_campaign_recipientsテーブル作成
+        status: pending
+      - id: "1.4"
+        title: marketing_email_queueテーブル作成
+        status: pending
+
+  - id: 2
+    priority: true
+    title: インデックス作成とRLSポリシー設定
+    requirements: [1.1, 2.1, 4.1, 5.1]
+    files:
+      - path: supabase/migrations/20250101000002_create_marketing_indexes_rls.sql
+        action: create
+    subtasks:
+      - id: "2.1"
+        title: パフォーマンスインデックス作成
+        details:
+          - idx_email_suppressions_operator_email
+          - idx_marketing_email_queue_status
+          - idx_marketing_campaigns_operator_status
+        status: pending
+      - id: "2.2"
+        title: RLSポリシー設定
+        details:
+          - オペレーター自社データのみアクセス可能
+        status: pending
+
+  - id: 3
+    title: 営業推奨ユーザー検索RPC関数作成
+    requirements: [1.1, 1.2, 1.3, 1.4]
+    files:
+      - path: supabase/migrations/20250101000003_create_get_marketing_recipients.sql
+        action: create
+    details:
+      - get_marketing_recipients RPC関数作成
+      - マッチスコア計算ロジック（エリア0.4、予算0.3、間取り0.2、建物種別0.1）
+      - 除外ロジック（送信済み、配信停止、スコア0）
+    status: pending
+
+  - id: 4
+    title: SuppressionService実装
+    requirements: [4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 5.1, 5.2, 5.3, 5.4, 5.5]
+    files:
+      - path: src/lib/services/suppression-service.ts
+        action: create
+    details:
+      - "checkSuppression: 配信停止チェック"
+      - "addSuppression: 配信停止追加（reason別処理）"
+      - "removeSuppression: 配信停止削除"
+      - "handleBounce: バウンス処理（Webhook用）"
+      - "handleSpamComplaint: 苦情処理"
+      - "cleanupExpired: 期限切れsoft_bounce削除"
+    acceptance_criteria:
+      - soft_bounceが7日後に自動解除される
+    status: pending
+
+  - id: 5
+    title: EmailQueueService実装
+    requirements: [2.3, 3.1, 3.2, 3.3, 3.4, 3.5]
+    files:
+      - path: src/lib/services/email-queue-service.ts
+        action: create
+    details:
+      - "enqueue: メールをキューに追加"
+      - "processQueue: キュー処理（Cron用）"
+      - "handleRetry: 指数バックオフリトライ（30分、1時間、2時間）"
+      - "markAsFailed: 最終失敗処理"
+    acceptance_criteria:
+      - 3回失敗で最終失敗となる
+    status: pending
+
+  - id: 6
+    title: CampaignService実装
+    requirements: [2.1, 2.2, 2.3, 2.4, 2.5]
+    files:
+      - path: src/lib/services/campaign-service.ts
+        action: create
+    details:
+      - "createCampaign: キャンペーン作成（draft状態）"
+      - "getRecipients: 営業推奨ユーザー検索（RPC呼び出し）"
+      - "sendCampaign: 配信実行（バッチ100件）"
+      - "updateCampaignStats: 統計更新"
+    status: pending
+
+  - id: 7
+    title: Resend Webhook Handler実装
+    requirements: [4.1, 4.2, 4.3, 4.4, 4.5]
+    files:
+      - path: src/lib/resend/webhook-handler.ts
+        action: create
+      - path: app/api/webhooks/resend/route.ts
+        action: create
+    subtasks:
+      - id: "7.1"
+        title: Webhook署名検証実装（svix）
+        status: pending
+      - id: "7.2"
+        title: イベントタイプ別処理実装
+        details:
+          - email.bounced → handleBounce
+          - email.complained → handleSpamComplaint
+        status: pending
+      - id: "7.3"
+        title: イベントID重複処理防止
+        status: pending
+      - id: "7.4"
+        title: エラーハンドリング
+        status: pending
+
+  - id: 8
+    priority: true
+    title: POST /api/marketing/campaigns APIルート
+    requirements: [2.1, 2.2]
+    files:
+      - path: app/api/marketing/campaigns/route.ts
+        action: create
+    status: pending
+
+  - id: 9
+    priority: true
+    title: GET /api/marketing/campaigns/:id/recipients APIルート
+    requirements: [1.1, 1.2, 1.3, 1.4, 1.5]
+    files:
+      - path: app/api/marketing/campaigns/[id]/recipients/route.ts
+        action: create
+    status: pending
+
+  - id: 10
+    priority: true
+    title: POST /api/marketing/campaigns/:id/send APIルート
+    requirements: [2.3, 2.4, 2.5]
+    files:
+      - path: app/api/marketing/campaigns/[id]/send/route.ts
+        action: create
+    status: pending
+
+  - id: 11
+    priority: true
+    title: POST /api/marketing/retry APIルート
+    requirements: [3.5]
+    files:
+      - path: app/api/marketing/retry/route.ts
+        action: create
+    status: pending
+
+  - id: 12
+    priority: true
+    title: GET /api/marketing/suppressions APIルート
+    requirements: [5.1, 5.2, 5.4]
+    files:
+      - path: app/api/marketing/suppressions/route.ts
+        action: create
+    status: pending
+
+  - id: 13
+    priority: true
+    title: POST /api/marketing/suppressions APIルート
+    requirements: [5.3]
+    files:
+      - path: app/api/marketing/suppressions/route.ts
+        action: modify
+    status: pending
+
+  - id: 14
+    priority: true
+    title: Vercel Cron Job設定
+    requirements: [2.3, 3.1, 4.6]
+    files:
+      - path: app/api/cron/process-email-queue/route.ts
+        action: create
+      - path: app/api/cron/cleanup-suppressions/route.ts
+        action: create
+      - path: vercel.json
+        action: modify
+    details:
+      - メールキュー処理（1分間隔）
+      - soft_bounce期限切れ削除（1日1回）
+    status: pending
+
+  - id: 15
+    title: CampaignFormコンポーネント
+    requirements: [2.1, 2.2]
+    files:
+      - path: src/components/features/marketing/CampaignForm.tsx
+        action: create
+    status: pending
+
+  - id: 16
+    priority: true
+    title: RecipientsSearchButtonコンポーネント
+    requirements: [1.1]
+    files:
+      - path: src/components/features/marketing/RecipientsSearchButton.tsx
+        action: create
+    status: pending
+
+  - id: 17
+    priority: true
+    title: RecipientsSummaryコンポーネント
+    requirements: [1.5]
+    files:
+      - path: src/components/features/marketing/RecipientsSummary.tsx
+        action: create
+    details:
+      - 条件マッチ数
+      - 除外数（送信済み、配信停止）
+      - 最終配信対象数
+    status: pending
+
+  - id: 18
+    title: RecipientsListコンポーネント
+    requirements: [1.6]
+    files:
+      - path: src/components/features/marketing/RecipientsList.tsx
+        action: create
+    details:
+      - 一覧表示（顧客名、メール、マッチスコア等）
+      - チェックボックス選択機能
+      - 配信実行ボタン
+    status: pending
+
+  - id: 19
+    priority: true
+    title: SuppressionListコンポーネント
+    requirements: [5.1, 5.2, 5.4]
+    files:
+      - path: src/components/features/marketing/SuppressionList.tsx
+        action: create
+    details:
+      - 一覧表示（メール、理由、日時、有効期限）
+      - reasonフィルタリング
+      - ページング
+    status: pending
+
+  - id: 20
+    priority: true
+    title: SuppressionAddFormコンポーネント
+    requirements: [5.3]
+    files:
+      - path: src/components/features/marketing/SuppressionAddForm.tsx
+        action: create
+    status: pending
+
+  - id: 21
+    priority: true
+    title: CampaignStatsコンポーネント
+    requirements: [2.4]
+    files:
+      - path: src/components/features/marketing/CampaignStats.tsx
+        action: create
+    details:
+      - 統計表示（送信数、開封数、クリック数、バウンス数）
+      - 開封率、クリック率
+      - グラフ表示（Recharts）
+    status: pending
+
+  - id: 22
+    priority: true
+    title: テスト実装
+    requirements: [All]
+    files:
+      - path: src/lib/services/__tests__/campaign-service.test.ts
+        action: create
+      - path: src/lib/services/__tests__/suppression-service.test.ts
+        action: create
+      - path: src/lib/services/__tests__/email-queue-service.test.ts
+        action: create
+      - path: app/api/marketing/__tests__/campaigns.test.ts
+        action: create
+      - path: app/api/webhooks/__tests__/resend.test.ts
+        action: create
+    acceptance_criteria:
+      - 全テストがパスする
+      - カバレッジ80%以上
+    status: pending
