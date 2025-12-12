@@ -1,0 +1,444 @@
+feature: foundation
+title: プロジェクト基盤実装タスク
+
+phases:
+  - name: "Phase 1: プロジェクト初期化"
+    tasks: ["1.1", "1.2", "1.3", "1.4"]
+  - name: "Phase 2: UIライブラリ"
+    depends_on: ["1.1"]
+    tasks: ["2.1", "2.2", "2.3"]
+  - name: "Phase 3: Supabase設定"
+    depends_on: ["1.1"]
+    tasks: ["3.1", "3.2", "3.3", "3.4"]
+  - name: "Phase 4: レイアウト・ナビゲーション"
+    depends_on: ["2.1", "2.2"]
+    tasks: ["4.1", "4.2", "4.3", "4.4", "5.1", "5.2", "5.3"]
+  - name: "Phase 5: エラーハンドリング・ユーティリティ"
+    depends_on: ["2.1"]
+    tasks: ["6.1", "6.2", "6.3", "7.1", "7.2", "7.3"]
+  - name: "Phase 6: テスト環境"
+    parallel: true
+    tasks: ["8.1", "8.2", "8.3"]
+
+tasks:
+  - id: "1"
+    title: プロジェクト初期化
+    requirements: [1]
+    subtasks:
+      - id: "1.1"
+        priority: true
+        title: Next.js 15プロジェクト作成
+        files:
+          - path: package.json
+            action: create
+          - path: next.config.ts
+            action: create
+          - path: tsconfig.json
+            action: create
+        details:
+          - "npx create-next-app@latest --typescript --tailwind --eslint --app --src-dir"
+          - App Router有効化
+          - TypeScript strict mode設定
+        status: pending
+      - id: "1.2"
+        priority: true
+        title: ESLint・Prettier設定
+        files:
+          - path: .eslintrc.json
+            action: create
+          - path: .prettierrc
+            action: create
+          - path: .prettierignore
+            action: create
+        details:
+          - ESLint推奨ルール + Next.js用ルール
+          - Prettier設定（singleQuote, semi等）
+          - VSCode設定（.vscode/settings.json）
+        status: pending
+      - id: "1.3"
+        priority: true
+        title: 環境変数設定
+        files:
+          - path: .env.example
+            action: create
+          - path: .env.local
+            action: create
+          - path: src/types/env.d.ts
+            action: create
+        details:
+          - 必要な環境変数の文書化
+          - 型定義ファイル作成
+          - .gitignore更新
+        status: pending
+      - id: "1.4"
+        priority: true
+        title: ディレクトリ構造作成
+        files:
+          - path: src/components/ui/.gitkeep
+            action: create
+          - path: src/components/layout/.gitkeep
+            action: create
+          - path: src/components/features/.gitkeep
+            action: create
+          - path: src/lib/supabase/.gitkeep
+            action: create
+          - path: src/lib/utils/.gitkeep
+            action: create
+          - path: src/lib/hooks/.gitkeep
+            action: create
+          - path: src/lib/services/.gitkeep
+            action: create
+          - path: src/schemas/.gitkeep
+            action: create
+          - path: src/types/.gitkeep
+            action: create
+        details:
+          - 設計書に基づくディレクトリ作成
+        status: pending
+
+  - id: "2"
+    title: UIライブラリセットアップ
+    requirements: [2]
+    subtasks:
+      - id: "2.1"
+        priority: true
+        title: Tailwind CSS v4設定
+        files:
+          - path: tailwind.config.ts
+            action: create
+          - path: src/app/globals.css
+            action: create
+        details:
+          - Tailwind CSS v4インストール
+          - カスタムカラー設定（primary, secondary等）
+          - フォント設定（Noto Sans JP）
+        status: pending
+      - id: "2.2"
+        priority: true
+        title: shadcn/ui初期化
+        files:
+          - path: components.json
+            action: create
+          - path: src/lib/utils/cn.ts
+            action: create
+        details:
+          - "npx shadcn@latest init"
+          - New Yorkスタイル選択
+          - cn()ユーティリティ作成
+        status: pending
+      - id: "2.3"
+        priority: true
+        title: 基本コンポーネントインストール
+        files:
+          - path: src/components/ui/button.tsx
+            action: create
+          - path: src/components/ui/input.tsx
+            action: create
+          - path: src/components/ui/card.tsx
+            action: create
+          - path: src/components/ui/dialog.tsx
+            action: create
+          - path: src/components/ui/dropdown-menu.tsx
+            action: create
+          - path: src/components/ui/toast.tsx
+            action: create
+          - path: src/components/ui/form.tsx
+            action: create
+          - path: src/components/ui/table.tsx
+            action: create
+          - path: src/components/ui/badge.tsx
+            action: create
+          - path: src/components/ui/skeleton.tsx
+            action: create
+        details:
+          - Button, Input, Card, Dialog
+          - DropdownMenu, Toast, Form
+          - Table, Badge, Skeleton
+        status: pending
+
+  - id: "3"
+    title: Supabaseクライアント設定
+    requirements: [3]
+    subtasks:
+      - id: "3.1"
+        priority: true
+        title: Supabase Server Client作成
+        files:
+          - path: src/lib/supabase/server.ts
+            action: create
+        details:
+          - "@supabase/ssr使用"
+          - Cookie-based session
+          - Server Component用
+        status: pending
+      - id: "3.2"
+        priority: true
+        title: Supabase Browser Client作成
+        files:
+          - path: src/lib/supabase/client.ts
+            action: create
+        details:
+          - "@supabase/ssr使用"
+          - Client Component用
+        status: pending
+      - id: "3.3"
+        priority: true
+        title: Supabase Service Role Client作成
+        files:
+          - path: src/lib/supabase/service-role.ts
+            action: create
+        details:
+          - Service Role Key使用
+          - RLSバイパス（キオスク用）
+          - サーバーサイドのみ
+        status: pending
+      - id: "3.4"
+        priority: true
+        title: Supabaseミドルウェア設定
+        files:
+          - path: src/middleware.ts
+            action: create
+        details:
+          - セッション更新処理
+          - 保護ルートのリダイレクト
+        status: pending
+
+  - id: "4"
+    title: レイアウトコンポーネント実装
+    requirements: [4]
+    subtasks:
+      - id: "4.1"
+        priority: true
+        title: AdminLayout実装
+        files:
+          - path: src/components/layout/AdminLayout.tsx
+            action: create
+          - path: app/(admin)/layout.tsx
+            action: create
+        details:
+          - 固定サイドバー（240px）
+          - ヘッダー
+          - メインコンテンツエリア
+          - レスポンシブ対応
+        status: pending
+      - id: "4.2"
+        priority: true
+        title: OperatorLayout実装
+        files:
+          - path: src/components/layout/OperatorLayout.tsx
+            action: create
+          - path: app/(operator)/layout.tsx
+            action: create
+        details:
+          - 固定サイドバー（240px）
+          - ヘッダー（会社名表示）
+          - メインコンテンツエリア
+          - レスポンシブ対応
+        status: pending
+      - id: "4.3"
+        title: KioskLayout実装
+        files:
+          - path: src/components/layout/KioskLayout.tsx
+            action: create
+          - path: app/kiosk/layout.tsx
+            action: create
+          - path: app/kiosk/[operatorId]/page.tsx
+            action: create
+        details:
+          - フルスクリーン表示
+          - ナビゲーションなし
+          - operator_idをURLパラメータから取得
+        status: pending
+      - id: "4.4"
+        title: AuthLayout実装
+        files:
+          - path: src/components/layout/AuthLayout.tsx
+            action: create
+          - path: app/(auth)/layout.tsx
+            action: create
+        details:
+          - 中央配置カード
+          - ロゴ表示
+          - 背景デザイン
+        status: pending
+
+  - id: "5"
+    title: ナビゲーションコンポーネント実装
+    requirements: [5]
+    subtasks:
+      - id: "5.1"
+        priority: true
+        title: AdminSidebar実装
+        files:
+          - path: src/components/layout/AdminSidebar.tsx
+            action: create
+        details:
+          - ナビゲーション項目定義
+          - アクティブ状態表示
+          - アイコン使用（lucide-react）
+        status: pending
+      - id: "5.2"
+        priority: true
+        title: OperatorSidebar実装
+        files:
+          - path: src/components/layout/OperatorSidebar.tsx
+            action: create
+        details:
+          - ナビゲーション項目定義
+          - アクティブ状態表示
+          - アイコン使用（lucide-react）
+        status: pending
+      - id: "5.3"
+        priority: true
+        title: Header・MobileNav実装
+        files:
+          - path: src/components/layout/Header.tsx
+            action: create
+          - path: src/components/layout/MobileNav.tsx
+            action: create
+        details:
+          - ユーザー情報表示
+          - ログアウトボタン
+          - モバイル用ハンバーガーメニュー
+        status: pending
+
+  - id: "6"
+    title: エラーハンドリングUI実装
+    requirements: [6]
+    subtasks:
+      - id: "6.1"
+        priority: true
+        title: グローバルエラーページ実装
+        files:
+          - path: app/error.tsx
+            action: create
+          - path: app/global-error.tsx
+            action: create
+        details:
+          - エラーメッセージ表示
+          - リトライボタン
+          - ホームへ戻るボタン
+        status: pending
+      - id: "6.2"
+        priority: true
+        title: 404ページ実装
+        files:
+          - path: app/not-found.tsx
+            action: create
+        details:
+          - フレンドリーなメッセージ
+          - ホームへ戻るリンク
+        status: pending
+      - id: "6.3"
+        priority: true
+        title: ローディング・トースト設定
+        files:
+          - path: app/loading.tsx
+            action: create
+          - path: src/components/ui/toaster.tsx
+            action: create
+          - path: src/components/providers/ToastProvider.tsx
+            action: create
+        details:
+          - スケルトンローディング
+          - トースト通知設定（sonner）
+        status: pending
+
+  - id: "7"
+    title: 共通ユーティリティ実装
+    requirements: [7]
+    subtasks:
+      - id: "7.1"
+        priority: true
+        title: フォーマットユーティリティ実装
+        files:
+          - path: src/lib/utils/format.ts
+            action: create
+          - path: src/lib/utils/__tests__/format.test.ts
+            action: create
+        details:
+          - formatDate（date-fns、Asia/Tokyo）
+          - formatCurrency（¥表記）
+          - formatPhone（電話番号）
+        status: pending
+      - id: "7.2"
+        priority: true
+        title: TanStack Queryプロバイダー設定
+        files:
+          - path: src/components/providers/QueryProvider.tsx
+            action: create
+          - path: app/layout.tsx
+            action: modify
+        details:
+          - QueryClient設定
+          - デフォルトオプション（staleTime等）
+          - プロバイダーラップ
+        status: pending
+      - id: "7.3"
+        title: 共通Zodスキーマ定義
+        files:
+          - path: src/schemas/common.ts
+            action: create
+        details:
+          - emailSchema
+          - phoneSchema
+          - paginationSchema
+          - dateRangeSchema
+        status: pending
+
+  - id: "8"
+    title: テスト環境セットアップ
+    requirements: [8]
+    subtasks:
+      - id: "8.1"
+        priority: true
+        title: Vitest設定
+        files:
+          - path: vitest.config.ts
+            action: create
+          - path: src/test/setup.ts
+            action: create
+        details:
+          - Vitest設定ファイル
+          - テスト用セットアップ
+          - カバレッジ設定
+        status: pending
+      - id: "8.2"
+        priority: true
+        title: Playwright設定
+        files:
+          - path: playwright.config.ts
+            action: create
+          - path: e2e/example.spec.ts
+            action: create
+        details:
+          - Playwright設定ファイル
+          - サンプルテスト作成
+          - CI用設定
+        status: pending
+      - id: "8.3"
+        title: Supabase CLI設定
+        files:
+          - path: supabase/config.toml
+            action: create
+        details:
+          - ローカル開発用設定
+          - マイグレーション設定
+        status: pending
+
+  - id: "9"
+    title: 型定義生成
+    requirements: [3]
+    subtasks:
+      - id: "9.1"
+        priority: true
+        title: Supabase型定義生成スクリプト
+        files:
+          - path: package.json
+            action: modify
+          - path: src/types/database.ts
+            action: create
+        details:
+          - "supabase gen types typescript スクリプト追加"
+          - 初期型定義ファイル作成
+        status: pending

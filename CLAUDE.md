@@ -13,8 +13,21 @@ Kiro-style Spec Driven Development implementation on AI-DLC (AI Development Life
 **Steering** (`.kiro/steering/`) - Guide AI with project-wide rules and context
 **Specs** (`.kiro/specs/`) - Formalize development process for individual features
 
-### Active Specifications
-- Check `.kiro/specs/` for active specifications
+### Active Specifications (9 specs)
+| # | Spec | 概要 | 依存関係 |
+|---|------|------|----------|
+| 1 | `foundation` | プロジェクト基盤（Next.js, Supabase, UI） | なし |
+| 2 | `auth` | 認証システム（ログイン, ロール管理） | foundation |
+| 3 | `property-management` | 物件管理（CRUD, 検索） | auth |
+| 4 | `operator-management` | オペレーター管理（Admin向け） | auth |
+| 5 | `ai-chat` | AIキオスク会話 | foundation, property |
+| 6 | `voice-io` | 音声入出力 | ai-chat |
+| 7 | `viewing-reservation` | 内見予約管理 | ai-chat, property |
+| 8 | `chrome-extension` | 物件取り込み拡張機能 | auth, property |
+| 9 | `marketing-email` | 営業メール配信 | auth, property |
+
+**推奨実装順序**: foundation → auth → property-management → operator-management → ai-chat → voice-io → viewing-reservation → chrome-extension → marketing-email
+
 - Use `/kiro:spec-status [feature-name]` to check progress
 
 ## Development Guidelines
@@ -41,5 +54,6 @@ Kiro-style Spec Driven Development implementation on AI-DLC (AI Development Life
 
 ## Steering Configuration
 - Load entire `.kiro/steering/` as project memory
-- Default files: `product.md`, `tech.md`, `structure.md`
+- Default files: `product.yaml`, `tech.yaml`, `structure.yaml`
 - Custom files are supported (managed via `/kiro:steering-custom`)
+- Current custom files: `security.yaml`, `ai-integration.yaml`, `architecture.yaml`, `development.yaml`, `supabase.yaml`, `database.yaml`, `api-standards.yaml`

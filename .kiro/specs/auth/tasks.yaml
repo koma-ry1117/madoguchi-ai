@@ -1,0 +1,281 @@
+feature: auth
+title: 認証システム実装タスク
+
+phases:
+  - name: "Phase 1: 認証基盤"
+    tasks: ["1.1", "1.2", "1.3"]
+  - name: "Phase 2: ログイン/ログアウト"
+    depends_on: ["1.1", "1.2"]
+    tasks: ["2.1", "2.2", "2.3", "2.4"]
+  - name: "Phase 3: パスワードリセット"
+    depends_on: ["2.1"]
+    tasks: ["3.1", "3.2", "3.3"]
+  - name: "Phase 4: 招待受諾"
+    depends_on: ["2.1"]
+    tasks: ["4.1", "4.2"]
+  - name: "Phase 5: ルート保護・ミドルウェア"
+    depends_on: ["1.3"]
+    tasks: ["5.1", "5.2", "5.3"]
+  - name: "Phase 6: テスト"
+    parallel: true
+    tasks: ["6.1", "6.2", "6.3"]
+
+tasks:
+  - id: "1"
+    title: 認証基盤セットアップ
+    requirements: [1, 6, 7]
+    subtasks:
+      - id: "1.1"
+        priority: true
+        title: AuthService実装
+        files:
+          - path: src/lib/services/auth-service.ts
+            action: create
+        details:
+          - signIn(email, password)
+          - signOut()
+          - resetPassword(email)
+          - updatePassword(password)
+          - getCurrentUser()
+          - getUserRole(user)
+        status: pending
+      - id: "1.2"
+        priority: true
+        title: 認証用Zodスキーマ定義
+        files:
+          - path: src/schemas/auth.ts
+            action: create
+        details:
+          - loginSchema（email, password）
+          - resetPasswordSchema（password, confirmPassword）
+          - setPasswordSchema（password, confirmPassword）
+        status: pending
+      - id: "1.3"
+        priority: true
+        title: useAuthフック実装
+        files:
+          - path: src/lib/hooks/useAuth.ts
+            action: create
+        details:
+          - 認証状態監視（onAuthStateChange）
+          - user, role, isLoading, signOut提供
+        status: pending
+
+  - id: "2"
+    title: ログイン/ログアウト機能
+    requirements: [1, 2]
+    subtasks:
+      - id: "2.1"
+        priority: true
+        title: LoginFormコンポーネント実装
+        files:
+          - path: src/components/features/auth/LoginForm.tsx
+            action: create
+        details:
+          - React Hook Form + Zod
+          - メール・パスワード入力
+          - エラーメッセージ表示
+          - ローディング状態
+        status: pending
+      - id: "2.2"
+        priority: true
+        title: ログインページ実装
+        files:
+          - path: app/(auth)/login/page.tsx
+            action: create
+        details:
+          - LoginForm配置
+          - パスワードリセットリンク
+          - AuthLayout使用
+        status: pending
+      - id: "2.3"
+        priority: true
+        title: ログイン処理実装
+        files:
+          - path: src/lib/services/auth-service.ts
+            action: modify
+        details:
+          - supabase.auth.signInWithPassword()
+          - ロール取得とリダイレクト先決定
+          - エラーハンドリング
+        status: pending
+      - id: "2.4"
+        priority: true
+        title: ログアウト処理実装
+        files:
+          - path: src/components/layout/Header.tsx
+            action: modify
+        details:
+          - ログアウトボタン追加
+          - supabase.auth.signOut()呼び出し
+          - /loginへリダイレクト
+        status: pending
+
+  - id: "3"
+    title: パスワードリセット機能
+    requirements: [3]
+    subtasks:
+      - id: "3.1"
+        priority: true
+        title: ForgotPasswordFormコンポーネント実装
+        files:
+          - path: src/components/features/auth/ForgotPasswordForm.tsx
+            action: create
+        details:
+          - メールアドレス入力
+          - 送信完了メッセージ
+        status: pending
+      - id: "3.2"
+        priority: true
+        title: パスワードリセットリクエストページ実装
+        files:
+          - path: app/(auth)/forgot-password/page.tsx
+            action: create
+        details:
+          - ForgotPasswordForm配置
+          - ログインリンク
+        status: pending
+      - id: "3.3"
+        priority: true
+        title: パスワード再設定ページ実装
+        files:
+          - path: src/components/features/auth/ResetPasswordForm.tsx
+            action: create
+          - path: app/(auth)/reset-password/page.tsx
+            action: create
+        details:
+          - 新しいパスワード入力フォーム
+          - パスワード確認入力
+          - supabase.auth.updateUser()呼び出し
+        status: pending
+
+  - id: "4"
+    title: 招待受諾・パスワード設定
+    requirements: [4]
+    subtasks:
+      - id: "4.1"
+        priority: true
+        title: SetPasswordFormコンポーネント実装
+        files:
+          - path: src/components/features/auth/SetPasswordForm.tsx
+            action: create
+        details:
+          - パスワード入力フォーム
+          - パスワード確認入力
+          - バリデーション
+        status: pending
+      - id: "4.2"
+        priority: true
+        title: 招待受諾ページ実装
+        files:
+          - path: app/(auth)/accept-invitation/page.tsx
+            action: create
+        details:
+          - 招待トークン検証
+          - SetPasswordForm配置
+          - operatorsテーブルstatus更新
+          - オペレーターダッシュボードへリダイレクト
+        status: pending
+
+  - id: "5"
+    title: ルート保護・ミドルウェア
+    requirements: [5, 6]
+    subtasks:
+      - id: "5.1"
+        priority: true
+        title: 認証ミドルウェア拡張
+        files:
+          - path: src/middleware.ts
+            action: modify
+        details:
+          - 保護ルート定義
+          - 未認証時リダイレクト
+          - ロール検証
+          - returnTo パラメータ保持
+        status: pending
+      - id: "5.2"
+        priority: true
+        title: Authコールバックルート実装
+        files:
+          - path: app/(auth)/callback/route.ts
+            action: create
+        details:
+          - Supabase Authコールバック処理
+          - セッション確立
+          - 適切なページへリダイレクト
+        status: pending
+      - id: "5.3"
+        title: useRequireAuthフック実装
+        files:
+          - path: src/lib/hooks/useRequireAuth.ts
+            action: create
+        details:
+          - Client Component用認証チェック
+          - 未認証時リダイレクト
+        status: pending
+
+  - id: "6"
+    title: テスト実装
+    requirements: [1, 2, 3, 4, 5]
+    subtasks:
+      - id: "6.1"
+        priority: true
+        title: AuthServiceユニットテスト
+        files:
+          - path: src/lib/services/__tests__/auth-service.test.ts
+            action: create
+        details:
+          - signIn/signOutテスト
+          - getUserRoleテスト
+          - エラーハンドリングテスト
+        status: pending
+      - id: "6.2"
+        priority: true
+        title: 認証フォームユニットテスト
+        files:
+          - path: src/components/features/auth/__tests__/LoginForm.test.tsx
+            action: create
+          - path: src/components/features/auth/__tests__/ResetPasswordForm.test.tsx
+            action: create
+        details:
+          - バリデーションテスト
+          - サブミット動作テスト
+        status: pending
+      - id: "6.3"
+        priority: true
+        title: 認証フローE2Eテスト
+        files:
+          - path: e2e/auth.spec.ts
+            action: create
+        details:
+          - ログイン → ダッシュボード
+          - 未認証アクセス → リダイレクト
+          - ログアウト → ログインページ
+          - パスワードリセットフロー
+        status: pending
+
+  - id: "7"
+    title: API認証ヘルパー
+    requirements: [7]
+    subtasks:
+      - id: "7.1"
+        priority: true
+        title: API認証ユーティリティ実装
+        files:
+          - path: src/lib/utils/api-auth.ts
+            action: create
+        details:
+          - getAuthUser(): 現在のユーザー取得
+          - requireAuth(): 認証必須チェック
+          - requireRole(role): ロール必須チェック
+          - 未認証/権限なし時のエラーレスポンス
+        status: pending
+      - id: "7.2"
+        title: GET /api/auth/me 実装
+        files:
+          - path: app/api/auth/me/route.ts
+            action: create
+        details:
+          - 現在のユーザー情報取得
+          - ロール情報を含む
+        status: pending

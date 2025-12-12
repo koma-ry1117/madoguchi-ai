@@ -1,0 +1,143 @@
+feature: foundation
+title: プロジェクト基盤要件定義
+
+introduction: |
+  madoguchi-aiプロジェクトの技術基盤。Next.js 15 App Router、Supabase、shadcn/ui等の
+  コア技術スタックのセットアップと、全機能で共有される共通コンポーネント・ユーティリティを提供する。
+
+use_cases:
+  - 開発者がプロジェクトをcloneしてすぐに開発を開始できる
+  - 全ページで一貫したUIデザインとレイアウトを提供
+  - Admin/Operator/Kioskの各ロール向けに適切なレイアウトを提供
+  - エラー発生時にユーザーフレンドリーな画面を表示
+
+requirements:
+  - id: 1
+    title: Next.js プロジェクトセットアップ
+    objective: As a developer, I want a properly configured Next.js project, so that I can start development immediately
+    acceptance_criteria:
+      - id: 1.1
+        description: Next.js 15 (App Router) プロジェクトが作成されている
+      - id: 1.2
+        description: TypeScript が strict モードで設定されている
+      - id: 1.3
+        description: ESLint と Prettier が設定されている
+      - id: 1.4
+        description: パスエイリアス（@/）が設定されている
+      - id: 1.5
+        description: 環境変数の型定義（env.d.ts）が存在する
+
+  - id: 2
+    title: UIライブラリセットアップ
+    objective: As a developer, I want a UI component library ready, so that I can build consistent interfaces
+    acceptance_criteria:
+      - id: 2.1
+        description: Tailwind CSS v4 が設定されている
+      - id: 2.2
+        description: shadcn/ui が初期化されている（New Yorkスタイル）
+      - id: 2.3
+        description: 基本コンポーネント（Button, Input, Card, Dialog等）がインストールされている
+      - id: 2.4
+        description: カスタムカラーテーマが設定されている（ブランドカラー）
+      - id: 2.5
+        description: ダークモード対応の準備ができている（将来対応用）
+
+  - id: 3
+    title: Supabaseクライアント設定
+    objective: As a developer, I want Supabase clients configured, so that I can access the database
+    acceptance_criteria:
+      - id: 3.1
+        description: Server Component用のSupabaseクライアントが作成されている
+      - id: 3.2
+        description: Client Component用のSupabaseクライアントが作成されている
+      - id: 3.3
+        description: Service Role用のSupabaseクライアントが作成されている（キオスク用）
+      - id: 3.4
+        description: 型安全なデータベース型（database.types.ts）が生成されている
+      - id: 3.5
+        description: Supabaseミドルウェアがセッション更新を処理している
+
+  - id: 4
+    title: 共通レイアウトコンポーネント
+    objective: As a user, I want consistent layouts, so that I can navigate the app easily
+    acceptance_criteria:
+      - id: 4.1
+        description: Adminダッシュボード用レイアウト（サイドバー + ヘッダー）が存在する
+      - id: 4.2
+        description: Operatorダッシュボード用レイアウト（サイドバー + ヘッダー）が存在する
+      - id: 4.3
+        description: キオスク用レイアウト（フルスクリーン、ナビなし）が存在する
+      - id: 4.4
+        description: 認証ページ用レイアウト（中央配置）が存在する
+      - id: 4.5
+        description: 各レイアウトはレスポンシブ対応している
+
+  - id: 5
+    title: ナビゲーションコンポーネント
+    objective: As a user, I want clear navigation, so that I can find features easily
+    acceptance_criteria:
+      - id: 5.1
+        description: Adminサイドバーナビゲーションが存在する（ダッシュボード、オペレーター管理等）
+      - id: 5.2
+        description: Operatorサイドバーナビゲーションが存在する（物件管理、予約管理等）
+      - id: 5.3
+        description: ヘッダーにユーザー情報とログアウトボタンが表示される
+      - id: 5.4
+        description: モバイル時はハンバーガーメニューに切り替わる
+      - id: 5.5
+        description: 現在のページがナビゲーションでハイライトされる
+
+  - id: 6
+    title: エラーハンドリングUI
+    objective: As a user, I want friendly error pages, so that I understand what went wrong
+    acceptance_criteria:
+      - id: 6.1
+        description: グローバルエラーバウンダリ（error.tsx）が存在する
+      - id: 6.2
+        description: 404ページ（not-found.tsx）が存在する
+      - id: 6.3
+        description: ローディング状態（loading.tsx）が存在する
+      - id: 6.4
+        description: トースト通知コンポーネントが設定されている
+      - id: 6.5
+        description: エラーページから「ホームに戻る」「リトライ」が可能
+
+  - id: 7
+    title: 共通ユーティリティ
+    objective: As a developer, I want common utilities, so that I don't repeat code
+    acceptance_criteria:
+      - id: 7.1
+        description: cn()関数（className結合）が存在する
+      - id: 7.2
+        description: 日付フォーマットユーティリティが存在する（date-fns）
+      - id: 7.3
+        description: 金額フォーマットユーティリティが存在する（¥表記）
+      - id: 7.4
+        description: TanStack Query のプロバイダーが設定されている
+      - id: 7.5
+        description: Zodスキーマの共通パターンが定義されている
+
+  - id: 8
+    title: 開発環境とツーリング
+    objective: As a developer, I want good DX tools, so that I can develop efficiently
+    acceptance_criteria:
+      - id: 8.1
+        description: Vitest がユニットテスト用に設定されている
+      - id: 8.2
+        description: Playwright がE2Eテスト用に設定されている
+      - id: 8.3
+        description: Supabase CLI がローカル開発用に設定されている
+      - id: 8.4
+        description: package.json に必要なスクリプトが定義されている
+      - id: 8.5
+        description: .env.example が存在し、必要な環境変数が文書化されている
+
+roles:
+  - name: developer
+    description: 開発者
+  - name: admin
+    description: システム管理者（gyam様）
+  - name: operator
+    description: 不動産会社（オペレーター）
+  - name: kiosk_user
+    description: キオスク利用者（認証不要）

@@ -1,0 +1,252 @@
+feature: auth
+title: 認証システム設計
+
+overview:
+  purpose: Admin/Operatorの認証・認可を管理し、保護されたルートへのアクセス制御を行う
+  users: Admin（システム管理者）、Operator（不動産会社）
+  impact: セキュアなマルチテナント環境を実現し、データの分離を保証
+
+goals:
+  - Supabase Authによるセキュアな認証
+  - ロールベースのアクセス制御（Admin/Operator）
+  - シームレスなセッション管理
+  - 招待フローによるオペレーター登録
+  - パスワードリセット機能
+
+non_goals:
+  - ソーシャルログイン（Google, GitHub等）
+  - 二要素認証（将来対応）
+  - キオスク利用者の認証（認証不要設計）
+
+technology_stack:
+  - layer: Authentication
+    choice: Supabase Auth
+    role: ユーザー認証、セッション管理
+  - layer: Session
+    choice: Cookie-based (@supabase/ssr)
+    role: セッション永続化
+  - layer: Authorization
+    choice: RLS + user_metadata
+    role: ロールベースアクセス制御
+  - layer: Email
+    choice: Supabase Auth Email (Resend SMTP)
+    role: 認証メール送信
+
+auth_flow:
+  login:
+    steps:
+      - ユーザーがメール・パスワードを入力
+      - supabase.auth.signInWithPassword()呼び出し
+      - 成功時、セッションCookieが設定される
+      - user_metadataからロールを取得
+      - ロールに応じたダッシュボードにリダイレクト
+    error_handling:
+      - Invalid credentials → エラーメッセージ表示
+      - Email not confirmed → 確認メール再送信リンク表示
+
+  logout:
+    steps:
+      - supabase.auth.signOut()呼び出し
+      - セッションCookieがクリアされる
+      - ログインページにリダイレクト
+
+  password_reset:
+    steps:
+      - ユーザーがメールアドレスを入力
+      - supabase.auth.resetPasswordForEmail()呼び出し
+      - ユーザーがメール内リンクをクリック
+      - /auth/reset-passwordページに遷移（tokenパラメータ付き）
+      - supabase.auth.updateUser({ password })で更新
+      - ログインページにリダイレクト
+
+  invitation_accept:
+    steps:
+      - 管理者がオペレーターを招待（admin.inviteUserByEmail）
+      - オペレーターが招待メールのリンクをクリック
+      - /auth/accept-invitationページに遷移
+      - supabase.auth.updateUser({ password })でパスワード設定
+      - operatorsテーブルのstatus更新（pending_activation → active）
+      - オペレーターダッシュボードにリダイレクト
+
+components:
+  pages:
+    - name: LoginPage
+      path: app/(auth)/login/page.tsx
+      intent: ログインページ
+      requirements: [1]
+      features:
+        - メール・パスワード入力フォーム
+        - ログインボタン
+        - パスワードリセットリンク
+        - エラーメッセージ表示
+
+    - name: ForgotPasswordPage
+      path: app/(auth)/forgot-password/page.tsx
+      intent: パスワードリセットリクエストページ
+      requirements: [3.1, 3.2]
+      features:
+        - メールアドレス入力フォーム
+        - 送信完了メッセージ
+
+    - name: ResetPasswordPage
+      path: app/(auth)/reset-password/page.tsx
+      intent: パスワード再設定ページ
+      requirements: [3.3, 3.4, 3.5]
+      features:
+        - 新しいパスワード入力
+        - パスワード確認入力
+        - バリデーション（8文字以上）
+
+    - name: AcceptInvitationPage
+      path: app/(auth)/accept-invitation/page.tsx
+      intent: 招待受諾・パスワード設定ページ
+      requirements: [4]
+      features:
+        - パスワード設定フォーム
+        - 招待リンク検証
+        - エラーハンドリング（期限切れ、既に有効化済み）
+
+  forms:
+    - name: LoginForm
+      path: src/components/features/auth/LoginForm.tsx
+      intent: ログインフォームコンポーネント
+      validation:
+        - email: メール形式
+        - password: 必須
+
+    - name: ForgotPasswordForm
+      path: src/components/features/auth/ForgotPasswordForm.tsx
+      intent: パスワードリセットリクエストフォーム
+      validation:
+        - email: メール形式
+
+    - name: ResetPasswordForm
+      path: src/components/features/auth/ResetPasswordForm.tsx
+      intent: パスワード再設定フォーム
+      validation:
+        - password: 8文字以上
+        - confirmPassword: passwordと一致
+
+    - name: SetPasswordForm
+      path: src/components/features/auth/SetPasswordForm.tsx
+      intent: 招待受諾時のパスワード設定フォーム
+      validation:
+        - password: 8文字以上
+        - confirmPassword: passwordと一致
+
+api_routes:
+  - path: POST /api/auth/login
+    description: ログイン処理（Server Action代替可）
+    note: Supabase Auth直接使用のため、API不要の場合あり
+
+  - path: POST /api/auth/logout
+    description: ログアウト処理
+    note: Supabase Auth直接使用のため、API不要の場合あり
+
+  - path: GET /api/auth/callback
+    description: OAuth/Magic Linkコールバック処理
+    details:
+      - Supabase Authのコールバック処理
+      - セッション確立後のリダイレクト
+
+  - path: GET /api/auth/me
+    description: 現在のユーザー情報取得
+    response:
+      user: User | null
+      role: "admin" | "operator" | null
+
+middleware:
+  - name: authMiddleware
+    path: src/middleware.ts
+    intent: セッション更新と保護ルートのリダイレクト
+    logic:
+      - すべてのリクエストでセッションを更新
+      - "保護ルート（/admin/*, /dashboard/*）へのアクセス時:"
+      - "  - 未認証 → /loginにリダイレクト"
+      - "  - 認証済み → ロール検証"
+      - "  - ロール不一致 → 適切なダッシュボードにリダイレクト"
+      - "認証ページ（/login等）へのアクセス時:"
+      - "  - 認証済み → ダッシュボードにリダイレクト"
+    protected_routes:
+      - "/admin/*" # adminロール必須
+      - "/dashboard/*" # operatorロール必須
+      - "/properties/*" # operatorロール必須
+      - "/viewings/*" # operatorロール必須
+      - "/customers/*" # operatorロール必須
+      - "/marketing/*" # operatorロール必須
+    public_routes:
+      - "/login"
+      - "/forgot-password"
+      - "/reset-password"
+      - "/accept-invitation"
+      - "/kiosk/*"
+      - "/api/kiosk/*"
+      - "/api/webhooks/*"
+
+hooks:
+  - name: useAuth
+    path: src/lib/hooks/useAuth.ts
+    intent: 認証状態とユーザー情報を提供
+    returns:
+      user: User | null
+      role: "admin" | "operator" | null
+      isLoading: boolean
+      signOut: () => Promise<void>
+
+  - name: useRequireAuth
+    path: src/lib/hooks/useRequireAuth.ts
+    intent: 認証必須ページで使用、未認証時リダイレクト
+    usage: Client Component用
+
+services:
+  - name: AuthService
+    path: src/lib/services/auth-service.ts
+    intent: 認証関連のビジネスロジック
+    methods:
+      - "signIn(email, password): ログイン"
+      - "signOut(): ログアウト"
+      - "resetPassword(email): パスワードリセットリクエスト"
+      - "updatePassword(password): パスワード更新"
+      - "getCurrentUser(): 現在のユーザー取得"
+      - "getUserRole(user): ロール取得"
+
+schemas:
+  - name: loginSchema
+    path: src/schemas/auth.ts
+    fields:
+      - "email: z.string().email()"
+      - "password: z.string().min(1)"
+
+  - name: resetPasswordSchema
+    path: src/schemas/auth.ts
+    fields:
+      - "password: z.string().min(8)"
+      - "confirmPassword: z.string()"
+    refinements:
+      - password === confirmPassword
+
+security:
+  session:
+    - Cookie: httpOnly, secure, sameSite=lax
+    - 有効期限: 7日（自動更新）
+    - CSRF対策: sameSite属性
+  password:
+    - 最小8文字
+    - Supabase Authがハッシュ化（bcrypt）
+  rate_limiting:
+    - ログイン試行: 5回/分（IP単位）
+    - パスワードリセット: 3回/時（メール単位）
+
+testing:
+  unit:
+    - LoginForm: バリデーション
+    - ResetPasswordForm: バリデーション
+    - AuthService: メソッド動作
+  integration:
+    - ログインフロー全体
+    - パスワードリセットフロー
+    - 招待受諾フロー
+  e2e:
+    - ログイン → ダッシュボード表示
+    - 未認証アクセス → リダイレクト
+    - ログアウト → ログインページ

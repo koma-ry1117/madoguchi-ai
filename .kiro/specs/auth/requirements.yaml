@@ -1,0 +1,129 @@
+feature: auth
+title: 認証システム要件定義
+
+introduction: |
+  madoguchi-aiの認証システム。Admin（システム管理者）とOperator（不動産会社）の
+  ログイン/ログアウト、パスワードリセット、セッション管理を提供する。
+  キオスク利用者は認証不要（Service Role Key使用）。
+
+use_cases:
+  - 管理者がシステムにログインしてオペレーターを管理する
+  - オペレーターが自社ダッシュボードにログインして物件・予約を管理する
+  - パスワードを忘れた場合にリセットできる
+  - 招待メールからパスワードを設定してアカウントを有効化する
+  - 未認証ユーザーが保護ページにアクセスした場合にログインページへリダイレクトする
+
+requirements:
+  - id: 1
+    title: ログイン機能
+    objective: As a user, I want to log in with email and password, so that I can access my dashboard
+    acceptance_criteria:
+      - id: 1.1
+        description: ユーザーはメールアドレスとパスワードでログインできる
+      - id: 1.2
+        description: ログイン成功後、ロールに応じたダッシュボードにリダイレクトする
+      - id: 1.3
+        description: ログイン失敗時、エラーメッセージを表示する（「メールアドレスまたはパスワードが正しくありません」）
+      - id: 1.4
+        description: ログインフォームはバリデーションを行う（メール形式、パスワード必須）
+      - id: 1.5
+        description: ログイン状態はセッションで維持される（Cookie-based）
+
+  - id: 2
+    title: ログアウト機能
+    objective: As a user, I want to log out, so that I can end my session securely
+    acceptance_criteria:
+      - id: 2.1
+        description: ユーザーはヘッダーのボタンからログアウトできる
+      - id: 2.2
+        description: ログアウト後、ログインページにリダイレクトする
+      - id: 2.3
+        description: ログアウト時、セッションが完全に破棄される
+
+  - id: 3
+    title: パスワードリセット機能
+    objective: As a user, I want to reset my password, so that I can recover my account
+    acceptance_criteria:
+      - id: 3.1
+        description: ユーザーはメールアドレスを入力してパスワードリセットをリクエストできる
+      - id: 3.2
+        description: システムはパスワードリセット用のメールを送信する
+      - id: 3.3
+        description: メール内のリンクからパスワード再設定ページにアクセスできる
+      - id: 3.4
+        description: 新しいパスワードを設定してログインできる
+      - id: 3.5
+        description: パスワードは8文字以上を要求する
+      - id: 3.6
+        description: リセットリンクは24時間で期限切れになる
+
+  - id: 4
+    title: 招待受諾・パスワード設定
+    objective: As an invited operator, I want to set my password, so that I can activate my account
+    acceptance_criteria:
+      - id: 4.1
+        description: 招待メールのリンクからパスワード設定ページにアクセスできる
+      - id: 4.2
+        description: パスワードを設定するとアカウントが有効化される
+      - id: 4.3
+        description: 有効化後、オペレーターダッシュボードにリダイレクトする
+      - id: 4.4
+        description: 招待リンクは24時間で期限切れになる
+      - id: 4.5
+        description: 既に有効化されている場合はエラーメッセージを表示する
+
+  - id: 5
+    title: ルート保護（AuthGuard）
+    objective: As a system, I want to protect routes, so that only authorized users can access them
+    acceptance_criteria:
+      - id: 5.1
+        description: 未認証ユーザーが保護ルートにアクセスすると、ログインページにリダイレクトする
+      - id: 5.2
+        description: Adminルートはadminロールのみアクセス可能
+      - id: 5.3
+        description: Operatorルートはoperatorロールのみアクセス可能
+      - id: 5.4
+        description: キオスクルートは認証不要でアクセス可能
+      - id: 5.5
+        description: リダイレクト時、元のURLを保持して認証後に戻れる
+
+  - id: 6
+    title: セッション管理
+    objective: As a system, I want to manage sessions securely, so that user data is protected
+    acceptance_criteria:
+      - id: 6.1
+        description: セッションはCookieで管理される（httpOnly, secure, sameSite）
+      - id: 6.2
+        description: セッションは7日間有効（自動更新あり）
+      - id: 6.3
+        description: ミドルウェアでセッションを自動更新する
+      - id: 6.4
+        description: 無効なセッションは自動的にクリアされる
+
+  - id: 7
+    title: ロールベースアクセス制御
+    objective: As a system, I want role-based access, so that users see only what they're allowed to
+    acceptance_criteria:
+      - id: 7.1
+        description: ユーザーにはadminまたはoperatorロールが割り当てられる
+      - id: 7.2
+        description: ロールはSupabase Auth user_metadataに保存される
+      - id: 7.3
+        description: APIルートでロールを検証する
+      - id: 7.4
+        description: フロントエンドでロールに応じたUI表示を切り替える
+
+roles:
+  - name: admin
+    description: システム管理者（gyam様）
+    permissions:
+      - オペレーター管理
+      - システム全体統計閲覧
+      - 全データアクセス
+  - name: operator
+    description: 不動産会社
+    permissions:
+      - 自社物件管理
+      - 自社顧客管理
+      - 自社予約管理
+      - 営業メール配信

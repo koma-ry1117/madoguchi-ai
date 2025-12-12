@@ -1,0 +1,242 @@
+feature: foundation
+title: プロジェクト基盤設計
+
+overview:
+  purpose: madoguchi-aiの技術基盤を構築し、全機能で使用される共通コンポーネントとユーティリティを提供する
+  users: 開発者、Admin、Operator、Kiosk利用者
+  impact: 一貫したUI/UXと効率的な開発環境を実現
+
+goals:
+  - Next.js 15 App Routerベースの堅牢なプロジェクト構造
+  - shadcn/ui + Tailwind CSS v4 による統一されたデザインシステム
+  - Supabaseクライアントの適切な分離（Server/Client/ServiceRole）
+  - ロール別レイアウトによる明確なUX分離
+  - 開発効率を高めるツーリングとユーティリティ
+
+non_goals:
+  - 個別機能の実装（他specで対応）
+  - 認証ロジックの実装（auth specで対応）
+  - ビジネスロジックの実装
+
+technology_stack:
+  - layer: Framework
+    choice: Next.js 15 (App Router)
+    role: SSR/RSC、ルーティング、ミドルウェア
+  - layer: Language
+    choice: TypeScript 5.x (strict mode)
+    role: 型安全性
+  - layer: CSS
+    choice: Tailwind CSS v4
+    role: ユーティリティファーストCSS
+  - layer: UI Components
+    choice: shadcn/ui (New York style)
+    role: 再利用可能UIコンポーネント
+  - layer: Database Client
+    choice: Supabase JS v2
+    role: DB/Auth/Storage接続
+  - layer: State Management
+    choice: TanStack Query v5
+    role: サーバー状態管理、キャッシュ
+  - layer: Form
+    choice: React Hook Form + Zod
+    role: フォーム管理、バリデーション
+  - layer: Date
+    choice: date-fns
+    role: 日付操作
+  - layer: Testing
+    choice: Vitest + Playwright
+    role: ユニット/E2Eテスト
+
+directory_structure:
+  root:
+    - name: app/
+      description: Next.js App Router ルート
+      children:
+        - "(admin)/ # Admin専用ルートグループ"
+        - "(operator)/ # Operator専用ルートグループ"
+        - "(auth)/ # 認証ページグループ"
+        - "kiosk/ # キオスクページ"
+        - "api/ # APIルート"
+        - "layout.tsx # ルートレイアウト"
+        - "error.tsx # グローバルエラー"
+        - "not-found.tsx # 404ページ"
+        - "loading.tsx # グローバルローディング"
+    - name: src/
+      description: アプリケーションコード
+      children:
+        - "components/ui/ # shadcn/uiコンポーネント"
+        - "components/layout/ # レイアウトコンポーネント"
+        - "components/features/ # 機能別コンポーネント"
+        - "lib/supabase/ # Supabaseクライアント"
+        - "lib/utils/ # ユーティリティ関数"
+        - "lib/hooks/ # カスタムフック"
+        - "lib/services/ # ビジネスロジック"
+        - "schemas/ # Zodスキーマ"
+        - "types/ # TypeScript型定義"
+    - name: supabase/
+      description: Supabase設定
+      children:
+        - "migrations/ # DBマイグレーション"
+        - "config.toml # Supabase設定"
+    - name: e2e/
+      description: E2Eテスト
+    - name: public/
+      description: 静的ファイル
+
+components:
+  layout:
+    - name: AdminLayout
+      path: src/components/layout/AdminLayout.tsx
+      intent: 管理者向けダッシュボードレイアウト
+      requirements: [4.1]
+      structure:
+        - "固定サイドバー（240px）"
+        - "ヘッダー（ユーザー情報、ログアウト）"
+        - "メインコンテンツエリア"
+
+    - name: OperatorLayout
+      path: src/components/layout/OperatorLayout.tsx
+      intent: オペレーター向けダッシュボードレイアウト
+      requirements: [4.2]
+      structure:
+        - "固定サイドバー（240px）"
+        - "ヘッダー（会社名、ユーザー情報、ログアウト）"
+        - "メインコンテンツエリア"
+
+    - name: KioskLayout
+      path: src/components/layout/KioskLayout.tsx
+      intent: キオスク向けフルスクリーンレイアウト
+      requirements: [4.3]
+      structure:
+        - "ナビゲーションなし"
+        - "フルスクリーン表示"
+        - "operator_idをURL/環境変数から取得"
+
+    - name: AuthLayout
+      path: src/components/layout/AuthLayout.tsx
+      intent: 認証ページ用中央配置レイアウト
+      requirements: [4.4]
+      structure:
+        - "中央配置カード"
+        - "ロゴ表示"
+        - "背景デザイン"
+
+  navigation:
+    - name: AdminSidebar
+      path: src/components/layout/AdminSidebar.tsx
+      intent: 管理者向けサイドバーナビゲーション
+      requirements: [5.1]
+      items:
+        - "ダッシュボード: /admin/dashboard"
+        - "オペレーター管理: /admin/operators"
+        - "システム設定: /admin/settings"
+
+    - name: OperatorSidebar
+      path: src/components/layout/OperatorSidebar.tsx
+      intent: オペレーター向けサイドバーナビゲーション
+      requirements: [5.2]
+      items:
+        - "ダッシュボード: /dashboard"
+        - "物件管理: /properties"
+        - "内見予約: /viewings"
+        - "顧客管理: /customers"
+        - "営業メール: /marketing"
+        - "Chrome拡張: /extension"
+
+    - name: Header
+      path: src/components/layout/Header.tsx
+      intent: 共通ヘッダー（ユーザー情報、ログアウト）
+      requirements: [5.3]
+
+    - name: MobileNav
+      path: src/components/layout/MobileNav.tsx
+      intent: モバイル用ハンバーガーメニュー
+      requirements: [5.4]
+
+  error:
+    - name: ErrorBoundary
+      path: app/error.tsx
+      intent: グローバルエラーバウンダリ
+      requirements: [6.1]
+
+    - name: NotFound
+      path: app/not-found.tsx
+      intent: 404ページ
+      requirements: [6.2]
+
+    - name: Loading
+      path: app/loading.tsx
+      intent: グローバルローディング
+      requirements: [6.3]
+
+    - name: Toaster
+      path: src/components/ui/toaster.tsx
+      intent: トースト通知
+      requirements: [6.4]
+
+supabase_clients:
+  - name: createServerClient
+    path: src/lib/supabase/server.ts
+    usage: Server Components、Route Handlers
+    auth: Cookie-based session
+
+  - name: createBrowserClient
+    path: src/lib/supabase/client.ts
+    usage: Client Components
+    auth: Cookie-based session
+
+  - name: createServiceRoleClient
+    path: src/lib/supabase/service-role.ts
+    usage: キオスク（認証バイパス）、Webhook
+    auth: Service Role Key（RLSバイパス）
+
+utilities:
+  - name: cn
+    path: src/lib/utils/cn.ts
+    description: className結合（clsx + tailwind-merge）
+
+  - name: formatDate
+    path: src/lib/utils/format.ts
+    description: 日付フォーマット（date-fns、Asia/Tokyo）
+
+  - name: formatCurrency
+    path: src/lib/utils/format.ts
+    description: 金額フォーマット（¥表記、カンマ区切り）
+
+  - name: formatPhone
+    path: src/lib/utils/format.ts
+    description: 電話番号フォーマット
+
+providers:
+  - name: QueryProvider
+    path: src/components/providers/QueryProvider.tsx
+    description: TanStack Query プロバイダー
+
+  - name: ThemeProvider
+    path: src/components/providers/ThemeProvider.tsx
+    description: ダークモード対応（将来用）
+
+environment_variables:
+  required:
+    - NEXT_PUBLIC_SUPABASE_URL
+    - NEXT_PUBLIC_SUPABASE_ANON_KEY
+    - SUPABASE_SERVICE_ROLE_KEY
+  optional:
+    - NEXT_PUBLIC_APP_URL
+    - DATABASE_URL # マイグレーション用
+
+testing:
+  unit:
+    tool: Vitest
+    config: vitest.config.ts
+    targets:
+      - ユーティリティ関数
+      - Zodスキーマ
+      - カスタムフック
+  e2e:
+    tool: Playwright
+    config: playwright.config.ts
+    targets:
+      - ナビゲーション動作
+      - レスポンシブ表示
+      - エラーページ表示
